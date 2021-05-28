@@ -7,8 +7,8 @@ import (
 
 	"github.com/goava/di"
 
-	"sanuscoin/sanuscoin-sdk/app/context"
-	"sanuscoin/sanuscoin-sdk/config"
+	"sanus/sanus-sdk/app/context"
+	"sanus/sanus-sdk/config"
 )
 
 // NewApp returns an application.

@@ -9,8 +9,8 @@ import (
 	"github.com/goava/di"
 	"github.com/urfave/cli/v2"
 
-	"sanuscoin/sanuscoin-sdk/app/context"
-	"sanuscoin/sanuscoin-sdk/config"
+	"sanus/sanus-sdk/app/context"
+	"sanus/sanus-sdk/config"
 )
 
 // initCommand appends initialize action to cli app.

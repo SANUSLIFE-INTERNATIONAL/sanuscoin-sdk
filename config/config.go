@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"sanuscoin/sanuscoin-sdk/misc/disk"
+	"sanus/sanus-sdk/misc/disk"
 
 	dotenv "github.com/joho/godotenv"
 	json "github.com/json-iterator/go"
@@ -135,4 +135,9 @@ func (c *Config) write() (err error) {
 	_, err = file.WriteString(strings.Join(rows, "\n"))
 
 	return err
+}
+
+// IsTestnet function returns true if service worked in testnet mode
+func (c *Config) IsTestnet() bool {
+	return c.Net.Testnet
 }

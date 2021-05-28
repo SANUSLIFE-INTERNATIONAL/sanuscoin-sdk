@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"log"
 
+	"sanus/sanus-sdk/btc"
+
 	"github.com/goava/di"
 	"github.com/urfave/cli/v2"
 
-	"sanuscoin/sanuscoin-sdk/app/context"
-	"sanuscoin/sanuscoin-sdk/config"
+	"sanus/sanus-sdk/app/context"
+	"sanus/sanus-sdk/config"
 )
 
 // startCommand appends start action to application.
@@ -33,18 +35,8 @@ func startCommand(dic *di.Container, ctx context.Context, cfg *config.Config, ap
 			}
 			return nil
 		},
-		Action: func(*cli.Context) error {
-			//// invoke network starter
-			//if err := dic.Invoke(network.Start); err != nil {
-			//	return fmt.Errorf("start network: %w", err)
-			//}
-			//// invoke storage service starter
-			//if err := dic.Invoke(storage.Start); err != nil {
-			//	return fmt.Errorf("start storage: %w", err)
-			//}
-
-			fmt.Println("Starting")
-
+		Action: func(c *cli.Context) error {
+			btc.Run(nil)
 			return nil
 		},
 		After: func(cc *cli.Context) error {

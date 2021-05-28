@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"sanuscoin/sanuscoin-sdk/config"
+	"sanus/sanus-sdk/config"
 )
 
 type (
