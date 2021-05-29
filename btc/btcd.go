@@ -1,4 +1,6 @@
-// Copyright © 2021 The Sanuscoin Team
+// Copyright (c) 2013-2016 The btcsuite developers
+// Use of this source code is governed by an ISC
+// license that can be found in the LICENSE file.
 
 package btc
 
@@ -14,7 +16,6 @@ import (
 	"github.com/btcsuite/btcd/database"
 )
 
-
 const (
 	// blockDbNamePrefix is the prefix for the block database name.  The
 	// database type is appended to this value to form the full block
@@ -26,11 +27,11 @@ var (
 	cfg *config
 )
 
-// WinServiceRun is only invoked on Windows.  It detects when btc is running
+// winServiceMain is only invoked on Windows.  It detects when btcd is running
 // as a service and reacts accordingly.
-var WinServiceRun func() (bool, error)
+var winServiceMain func() (bool, error)
 
-// Run is the real main function for btc.  It is necessary to work around
+// btcdMain is the real main function for btcd.  It is necessary to work around
 // the fact that deferred functions do not run when os.Exit() is called.  The
 // optional serverChan parameter is mainly used by the service code to be
 // notified with the server once it is setup so it can gracefully stop it when
@@ -82,7 +83,7 @@ func Run(serverChan chan<- *server) error {
 		defer pprof.StopCPUProfile()
 	}
 
-	// Perform upgrades to btc as new versions require it.
+	// Perform upgrades to btcd as new versions require it.
 	if err := doUpgrades(); err != nil {
 		btcdLog.Errorf("%v", err)
 		return err
@@ -290,3 +291,34 @@ func loadBlockDB() (database.DB, error) {
 	btcdLog.Info("Block database loaded")
 	return db, nil
 }
+
+//func main() {
+//	// Use all processor cores.
+//	runtime.GOMAXPROCS(runtime.NumCPU())
+//
+//	// Block and transaction processing can cause bursty allocations.  This
+//	// limits the garbage collector from excessively overallocating during
+//	// bursts.  This value was arrived at with the help of profiling live
+//	// usage.
+//	debug.SetGCPercent(10)
+//
+//	// Up some limits.
+//	if err := limits.SetLimits(); err != nil {
+//		fmt.Fprintf(os.Stderr, "failed to set limits: %v\n", err)
+//		os.Exit(1)
+//	}
+//
+//	// Call serviceMain on Windows to handle running as a service.  When
+//	// the return isService flag is true, exit now since we ran as a
+//	// service.  Otherwise, just fall through to normal operation.
+//	if runtime.GOOS == "windows" {
+//		isService, err := winServiceMain()
+//		if err != nil {
+//			fmt.Println(err)
+//			os.Exit(1)
+//		}
+//		if isService {
+//			os.Exit(0)
+//		}
+//	}
+//}

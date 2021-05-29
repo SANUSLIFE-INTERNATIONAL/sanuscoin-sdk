@@ -1,4 +1,6 @@
-// Copyright © 2021 The Sanuscoin Team
+// Copyright (c) 2013-2016 The btcsuite developers
+// Use of this source code is governed by an ISC
+// license that can be found in the LICENSE file.
 
 package btc
 
@@ -14,7 +16,7 @@ import (
 )
 
 const (
-	// svcName is the name of btc service.
+	// svcName is the name of btcd service.
 	svcName = "btcdsvc"
 
 	// svcDisplayName is the service name that will be shown in the windows
@@ -30,7 +32,7 @@ const (
 // elog is used to send messages to the Windows event log.
 var elog *eventlog.Log
 
-// logServiceStartOfDay logs information about btc when the main server has
+// logServiceStartOfDay logs information about btcd when the main server has
 // been started to the Windows event log.
 func logServiceStartOfDay(srvr *server) {
 	var message string
@@ -43,26 +45,26 @@ func logServiceStartOfDay(srvr *server) {
 }
 
 // btcdService houses the main service handler which handles all service
-// updates and launching Run.
+// updates and launching btcdMain.
 type btcdService struct{}
 
-// Execute is the main entry point the winsvc package calls when receiving
+// Execute is the btc entry point the winsvc package calls when receiving
 // information from the Windows service control manager.  It launches the
-// long-running Run (which is the real meat of btc), handles service
+// long-running btcdMain (which is the real meat of btcd), handles service
 // change requests, and notifies the service control manager of changes.
 func (s *btcdService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (bool, uint32) {
 	// Service start is pending.
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown
 	changes <- svc.Status{State: svc.StartPending}
 
-	// Start Run in a separate goroutine so the service can start
+	// Start btcdMain in a separate goroutine so the service can start
 	// quickly.  Shutdown (along with a potential error) is reported via
-	// doneChan.  serverChan is notified with the main server instance once
+	// doneChan.  serverChan is notified with the btc server instance once
 	// it is started so it can be gracefully stopped.
 	doneChan := make(chan error)
 	serverChan := make(chan *server)
 	go func() {
-		err := Run(serverChan)
+		err := btcdMain(serverChan)
 		doneChan <- err
 	}()
 
@@ -83,7 +85,7 @@ loop:
 				// more commands while pending.
 				changes <- svc.Status{State: svc.StopPending}
 
-				// Signal the main function to exit.
+				// Signal the btc function to exit.
 				shutdownRequestChannel <- struct{}{}
 
 			default:
@@ -108,7 +110,7 @@ loop:
 	return false, 0
 }
 
-// installService attempts to install the btc service.  Typically this should
+// installService attempts to install the btcd service.  Typically this should
 // be done by the msi installer, but it is provided here since it can be useful
 // for development.
 func installService() error {
@@ -157,7 +159,7 @@ func installService() error {
 	return eventlog.InstallAsEventCreate(svcName, eventsSupported)
 }
 
-// removeService attempts to uninstall the btc service.  Typically this should
+// removeService attempts to uninstall the btcd service.  Typically this should
 // be done by the msi uninstaller, but it is provided here since it can be
 // useful for development.  Not the eventlog entry is intentionally not removed
 // since it would invalidate any existing event log messages.
@@ -180,7 +182,7 @@ func removeService() error {
 	return service.Delete()
 }
 
-// startService attempts to start the btc service.
+// startService attempts to start the btcd service.
 func startService() error {
 	// Connect to the windows service manager.
 	serviceManager, err := mgr.Connect()
@@ -273,22 +275,6 @@ func performServiceCommand(command string) error {
 // returned to the caller so the application can determine whether to exit (when
 // running as a service) or launch in normal interactive mode.
 func serviceMain() (bool, error) {
-	// Don't run as a service if the user explicitly requested it. This is
-	// needed to run btc on Windows in CI environments like Travis.
-	// We can't use the config struct to access the value because that's not
-	// parsed yet. But we add the flag to the struct anyway so the parser
-	// won't complain about it later.
-	noService := false
-	for _, arg := range os.Args {
-		if arg == "--nowinservice" {
-			noService = true
-			break
-		}
-	}
-	if noService {
-		return false, nil
-	}
-
 	// Don't run as a service if we're running interactively (or that can't
 	// be determined due to an error).
 	isInteractive, err := svc.IsAnInteractiveSession()
@@ -317,5 +303,5 @@ func serviceMain() (bool, error) {
 // Set windows specific functions to real functions.
 func init() {
 	runServiceCommand = performServiceCommand
-	WinServiceRun = serviceMain
+	winServiceMain = serviceMain
 }

@@ -1,3 +1,16 @@
+### Install
+```Bash
+$ go instal
+```
+
+### Sanuscoin (sanus-sdk) usage
+```Bash
+$ sanus start (starts btcd daemon)
+$ sanus init (initialize configuration)
+$ sanus version (returns current sanus-sdk version)
+```
+
+
 ### .env Usage
 
 ##### Set some .env variables:

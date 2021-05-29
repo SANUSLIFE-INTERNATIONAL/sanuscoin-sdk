@@ -1,4 +1,7 @@
-// Copyright © 2021 The Sanuscoin Team
+// Copyright (c) 2013-2017 The btcsuite developers
+// Copyright (c) 2015-2018 The Decred developers
+// Use of this source code is governed by an ISC
+// license that can be found in the LICENSE file.
 
 package btc
 
@@ -59,7 +62,7 @@ const (
 var (
 	// userAgentName is the user agent name and is used to help identify
 	// ourselves to other bitcoin peers.
-	userAgentName = "btc"
+	userAgentName = "btcd"
 
 	// userAgentVersion is the user agent version and is used to help
 	// identify ourselves to other bitcoin peers.
@@ -361,14 +364,14 @@ func (sp *serverPeer) pushAddrMsg(addresses []*wire.NetAddress) {
 // threshold, a warning is logged including the reason provided. Further, if
 // the score is above the ban threshold, the peer will be banned and
 // disconnected.
-func (sp *serverPeer) addBanScore(persistent, transient uint32, reason string) bool {
+func (sp *serverPeer) addBanScore(persistent, transient uint32, reason string) {
 	// No warning is logged and no score is calculated if banning is disabled.
 	if cfg.DisableBanning {
-		return false
+		return
 	}
 	if sp.isWhitelisted {
 		peerLog.Debugf("Misbehaving whitelisted peer %s: %s", sp, reason)
-		return false
+		return
 	}
 
 	warnThreshold := cfg.BanThreshold >> 1
@@ -380,7 +383,7 @@ func (sp *serverPeer) addBanScore(persistent, transient uint32, reason string) b
 			peerLog.Warnf("Misbehaving peer %s: %s -- ban score is %d, "+
 				"it was not increased this time", sp, reason, score)
 		}
-		return false
+		return
 	}
 	score := sp.banScore.Increase(persistent, transient)
 	if score > warnThreshold {
@@ -391,10 +394,8 @@ func (sp *serverPeer) addBanScore(persistent, transient uint32, reason string) b
 				sp)
 			sp.server.BanPeer(sp)
 			sp.Disconnect()
-			return true
 		}
 	}
-	return false
 }
 
 // hasServices returns whether or not the provided advertised service flags have
@@ -497,9 +498,7 @@ func (sp *serverPeer) OnMemPool(_ *peer.Peer, msg *wire.MsgMemPool) {
 	// The ban score accumulates and passes the ban threshold if a burst of
 	// mempool messages comes from a peer. The score decays each minute to
 	// half of its value.
-	if sp.addBanScore(0, 33, "mempool") {
-		return
-	}
+	sp.addBanScore(0, 33, "mempool")
 
 	// Generate inventory message with the available transactions in the
 	// transaction memory pool.  Limit it to the max allowed inventory
@@ -639,9 +638,7 @@ func (sp *serverPeer) OnGetData(_ *peer.Peer, msg *wire.MsgGetData) {
 	// bursts of small requests are not penalized as that would potentially ban
 	// peers performing IBD.
 	// This incremental score decays each minute to half of its value.
-	if sp.addBanScore(0, uint32(length)*99/wire.MaxInvPerMsg, "getdata") {
-		return
-	}
+	sp.addBanScore(0, uint32(length)*99/wire.MaxInvPerMsg, "getdata")
 
 	// We wait on this wait channel periodically to prevent queuing
 	// far more data than we can send in a reasonable time, wasting memory.
@@ -1032,7 +1029,7 @@ func (sp *serverPeer) OnGetCFCheckpt(_ *peer.Peer, msg *wire.MsgGetCFCheckpt) {
 
 	// Now that we know the cache is of an appropriate size, we'll iterate
 	// backwards until the find the block hash. We do this as it's possible
-	// a re-org has occurred so items in the db are now in the main china
+	// a re-org has occurred so items in the db are now in the btc china
 	// while the cache has been partially invalidated.
 	var forkIdx int
 	for forkIdx = len(blockHashes); forkIdx > 0; forkIdx-- {
@@ -1080,7 +1077,7 @@ func (sp *serverPeer) OnGetCFCheckpt(_ *peer.Peer, msg *wire.MsgGetCFCheckpt) {
 
 		checkptMsg.AddCFHeader(filterHeader)
 
-		// If the new main chain is longer than what's in the cache,
+		// If the new btc chain is longer than what's in the cache,
 		// then we'll override it beyond the fork point.
 		if updateCache {
 			checkptCache[forkIdx+i] = cfHeaderKV{
@@ -1224,7 +1221,7 @@ func (sp *serverPeer) OnGetAddr(_ *peer.Peer, msg *wire.MsgGetAddr) {
 	// Do not accept getaddr requests from outbound peers.  This reduces
 	// fingerprinting attacks.
 	if !sp.Inbound() {
-		peerLog.Debugf("Ignoring getaddr request from outbound peer "+
+		peerLog.Debugf("Ignoring getaddr request from outbound peer ",
 			"%v", sp)
 		return
 	}
@@ -1232,7 +1229,7 @@ func (sp *serverPeer) OnGetAddr(_ *peer.Peer, msg *wire.MsgGetAddr) {
 	// Only allow one getaddr request per connection to discourage
 	// address stamping of inv announcements.
 	if sp.sentAddrs {
-		peerLog.Debugf("Ignoring repeated getaddr request from peer "+
+		peerLog.Debugf("Ignoring repeated getaddr request from peer ",
 			"%v", sp)
 		return
 	}
@@ -1307,44 +1304,6 @@ func (sp *serverPeer) OnWrite(_ *peer.Peer, bytesWritten int, msg wire.Message, 
 	sp.server.AddBytesSent(uint64(bytesWritten))
 }
 
-// OnNotFound is invoked when a peer sends a notfound message.
-func (sp *serverPeer) OnNotFound(p *peer.Peer, msg *wire.MsgNotFound) {
-	if !sp.Connected() {
-		return
-	}
-
-	var numBlocks, numTxns uint32
-	for _, inv := range msg.InvList {
-		switch inv.Type {
-		case wire.InvTypeBlock:
-			numBlocks++
-		case wire.InvTypeTx:
-			numTxns++
-		default:
-			peerLog.Debugf("Invalid inv type '%d' in notfound message from %s",
-				inv.Type, sp)
-			sp.Disconnect()
-			return
-		}
-	}
-	if numBlocks > 0 {
-		blockStr := pickNoun(uint64(numBlocks), "block", "blocks")
-		reason := fmt.Sprintf("%d %v not found", numBlocks, blockStr)
-		if sp.addBanScore(20*numBlocks, 0, reason) {
-			return
-		}
-	}
-	if numTxns > 0 {
-		txStr := pickNoun(uint64(numTxns), "transaction", "transactions")
-		reason := fmt.Sprintf("%d %v not found", numBlocks, txStr)
-		if sp.addBanScore(0, 10*numTxns, reason) {
-			return
-		}
-	}
-
-	sp.server.syncManager.QueueNotFound(msg, p)
-}
-
 // randomUint16Number returns a random uint16 in a specified input range.  Note
 // that the range is in zeroth ordering; if you pass it 1800, you will get
 // values from 0 to 1800.
@@ -1410,7 +1369,7 @@ func (s *server) AnnounceNewTransactions(txns []*mempool.TxDesc) {
 	}
 }
 
-// Transaction has one confirmation on the main chain. Now we can mark it as no
+// Transaction has one confirmation on the btc chain. Now we can mark it as no
 // longer needing rebroadcasting.
 func (s *server) TransactionConfirmed(tx *btcutil.Tx) {
 	// Rebroadcasting is only necessary when the RPC server is active.
@@ -2039,7 +1998,6 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 			OnAddr:         sp.OnAddr,
 			OnRead:         sp.OnRead,
 			OnWrite:        sp.OnWrite,
-			OnNotFound:     sp.OnNotFound,
 
 			// Note: The reference client currently bans peers that send alerts
 			// not signed with its key.  We could verify against their key, but
@@ -2281,7 +2239,7 @@ func (s *server) NetTotals() (uint64, uint64) {
 }
 
 // UpdatePeerHeights updates the heights of all peers who have have announced
-// the latest connected main chain block, or a recognized orphan. These height
+// the latest connected btc chain block, or a recognized orphan. These height
 // updates allow us to dynamically refresh peer heights, ensuring sync peer
 // selection has access to the latest block heights for each peer.
 func (s *server) UpdatePeerHeights(latestBlkHash *chainhash.Hash, latestHeight int32, updateSource *peer.Peer) {
@@ -2312,7 +2270,9 @@ out:
 			// When an InvVect has been added to a block, we can
 			// now remove it, if it was present.
 			case broadcastInventoryDel:
-				delete(pendingInvs, *msg)
+				if _, ok := pendingInvs[*msg]; ok {
+					delete(pendingInvs, *msg)
+				}
 			}
 
 		case <-timer.C:
@@ -2387,7 +2347,7 @@ func (s *server) Start() {
 }
 
 // Stop gracefully shuts down the server by stopping and disconnecting all
-// peers and the main listener.
+// peers and the btc listener.
 func (s *server) Stop() error {
 	// Make sure this only happens once.
 	if atomic.AddInt32(&s.shutdown, 1) != 1 {
@@ -2418,7 +2378,7 @@ func (s *server) Stop() error {
 	return nil
 }
 
-// WaitForShutdown blocks until the main listener and peer handlers are stopped.
+// WaitForShutdown blocks until the btc listener and peer handlers are stopped.
 func (s *server) WaitForShutdown() {
 	s.wg.Wait()
 }
@@ -2523,7 +2483,7 @@ out:
 			// listen port?
 			// XXX this assumes timeout is in seconds.
 			listenPort, err := s.nat.AddPortMapping("tcp", int(lport), int(lport),
-				"btc listen port", 20*60)
+				"btcd listen port", 20*60)
 			if err != nil {
 				srvrLog.Warnf("can't add UPnP port mapping: %v", err)
 			}
@@ -2610,7 +2570,7 @@ func setupRPCListeners() ([]net.Listener, error) {
 	return listeners, nil
 }
 
-// newServer returns a new btc server configured to listen on addr for the
+// newServer returns a new btcd server configured to listen on addr for the
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
 func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,

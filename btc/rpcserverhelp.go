@@ -152,8 +152,8 @@ var helpDescsEnUS = map[string]string{
 	"getbestblockresult-height": "Height of the best block",
 
 	// GetBestBlockCmd help.
-	"getbestblock--synopsis": "Get block height and hash of best block in the main chain.",
-	"getbestblock--result0":  "Get block height and hash of best block in the main chain.",
+	"getbestblock--synopsis": "Get block height and hash of best block in the btc chain.",
+	"getbestblock--result0":  "Get block height and hash of best block in the btc chain.",
 
 	// GetBestBlockHashCmd help.
 	"getbestblockhash--synopsis": "Returns the hash of the of the best (most recent) block in the longest block chain.",
@@ -162,9 +162,10 @@ var helpDescsEnUS = map[string]string{
 	// GetBlockCmd help.
 	"getblock--synopsis":   "Returns information about a block given its hash.",
 	"getblock-hash":        "The hash of the block",
-	"getblock-verbosity":   "Specifies whether the block data should be returned as a hex-encoded string (0), as parsed data with a slice of TXIDs (1), or as parsed data with parsed transaction data (2) ",
-	"getblock--condition0": "verbosity=0",
-	"getblock--condition1": "verbosity=1",
+	"getblock-verbose":     "Specifies the block is returned as a JSON object instead of hex-encoded string",
+	"getblock-verbosetx":   "Specifies that each transaction is returned as a JSON object and only applies if the verbose flag is true (btcd extension)",
+	"getblock--condition0": "verbose=false",
+	"getblock--condition1": "verbose=true",
 	"getblock--result0":    "Hex-encoded bytes of the serialized block",
 
 	// GetBlockChainInfoCmd help.
@@ -174,7 +175,7 @@ var helpDescsEnUS = map[string]string{
 	"getblockchaininforesult-chain":                "The name of the chain the daemon is on (testnet, mainnet, etc)",
 	"getblockchaininforesult-blocks":               "The number of blocks in the best known chain",
 	"getblockchaininforesult-headers":              "The number of headers that we've gathered for in the best known chain",
-	"getblockchaininforesult-bestblockhash":        "The block hash for the latest block in the main chain",
+	"getblockchaininforesult-bestblockhash":        "The block hash for the latest block in the btc chain",
 	"getblockchaininforesult-difficulty":           "The current chain difficulty",
 	"getblockchaininforesult-mediantime":           "The median time from the PoV of the best block in the chain",
 	"getblockchaininforesult-verificationprogress": "An estimate for how much of the best chain we've verified",
@@ -243,8 +244,8 @@ var helpDescsEnUS = map[string]string{
 	"getblockverboseresult-version":           "The block version",
 	"getblockverboseresult-versionHex":        "The block version in hexadecimal",
 	"getblockverboseresult-merkleroot":        "Root hash of the merkle tree",
-	"getblockverboseresult-tx":                "The transaction hashes (only when verbosity=1)",
-	"getblockverboseresult-rawtx":             "The transactions as JSON objects (only when verbosity=2)",
+	"getblockverboseresult-tx":                "The transaction hashes (only when verbosetx=false)",
+	"getblockverboseresult-rawtx":             "The transactions as JSON objects (only when verbosetx=true)",
 	"getblockverboseresult-time":              "The block time in seconds since 1 Jan 1970 GMT",
 	"getblockverboseresult-nonce":             "The block nonce",
 	"getblockverboseresult-bits":              "The bits which represent the block difficulty",
@@ -550,7 +551,7 @@ var helpDescsEnUS = map[string]string{
 	// SendRawTransactionCmd help.
 	"sendrawtransaction--synopsis":     "Submits the serialized, hex-encoded transaction to the local peer and relays it to the network.",
 	"sendrawtransaction-hextx":         "Serialized, hex-encoded signed transaction",
-	"sendrawtransaction-allowhighfees": "Whether or not to allow insanely high fees (btc does not yet implement this parameter, so it has no effect)",
+	"sendrawtransaction-allowhighfees": "Whether or not to allow insanely high fees (btcd does not yet implement this parameter, so it has no effect)",
 	"sendrawtransaction-maxfeerate":    "Used by bitcoind on or after v0.19.0",
 	"sendrawtransaction--result0":      "The hash of the transaction",
 
@@ -560,8 +561,8 @@ var helpDescsEnUS = map[string]string{
 	"setgenerate-genproclimit": "The number of processors (cores) to limit generation to or -1 for default",
 
 	// StopCmd help.
-	"stop--synopsis": "Shutdown btc.",
-	"stop--result0":  "The string 'btc stopping.'",
+	"stop--synopsis": "Shutdown btcd.",
+	"stop--result0":  "The string 'btcd stopping.'",
 
 	// SubmitBlockOptions help.
 	"submitblockoptions-workid": "This parameter is currently ignored",
@@ -585,7 +586,7 @@ var helpDescsEnUS = map[string]string{
 	// VerifyChainCmd help.
 	"verifychain--synopsis": "Verifies the block chain database.\n" +
 		"The actual checks performed by the checklevel parameter are implementation specific.\n" +
-		"For btc this is:\n" +
+		"For btcd this is:\n" +
 		"checklevel=0 - Look up each block and ensure it can be loaded from the database.\n" +
 		"checklevel=1 - Perform basic context-free sanity checks on each block.",
 	"verifychain-checklevel": "How thorough the block verification is",
@@ -606,10 +607,10 @@ var helpDescsEnUS = map[string]string{
 	"sessionresult-sessionid": "The unique session ID for a client's websocket connection.",
 
 	// NotifyBlocksCmd help.
-	"notifyblocks--synopsis": "Request notifications for whenever a block is connected or disconnected from the main (best) chain.",
+	"notifyblocks--synopsis": "Request notifications for whenever a block is connected or disconnected from the btc (best) chain.",
 
 	// StopNotifyBlocksCmd help.
-	"stopnotifyblocks--synopsis": "Cancel registered notifications for whenever a block is connected or disconnected from the main (best) chain.",
+	"stopnotifyblocks--synopsis": "Cancel registered notifications for whenever a block is connected or disconnected from the btc (best) chain.",
 
 	// NotifyNewTransactionsCmd help.
 	"notifynewtransactions--synopsis": "Send either a txaccepted or a txacceptedverbose notification when a new transaction is accepted into the mempool.",
@@ -632,7 +633,7 @@ var helpDescsEnUS = map[string]string{
 	"outpoint-index": "The index of the outpoint",
 
 	// NotifySpentCmd help.
-	"notifyspent--synopsis": "Send a redeemingtx notification when a transaction spending an outpoint appears in mempool (if relayed to this btc instance) and when such a transaction first appears in a newly-attached block.",
+	"notifyspent--synopsis": "Send a redeemingtx notification when a transaction spending an outpoint appears in mempool (if relayed to this btcd instance) and when such a transaction first appears in a newly-attached block.",
 	"notifyspent-outpoints": "List of transaction outpoints to monitor.",
 
 	// StopNotifySpentCmd help.
@@ -647,7 +648,7 @@ var helpDescsEnUS = map[string]string{
 
 	// Rescan help.
 	"rescan--synopsis": "Rescan block chain for transactions to addresses.\n" +
-		"When the endblock parameter is omitted, the rescan continues through the best block in the main chain.\n" +
+		"When the endblock parameter is omitted, the rescan continues through the best block in the btc chain.\n" +
 		"Rescan results are sent as recvtx and redeemingtx notifications.\n" +
 		"This call returns once the rescan completes.",
 	"rescan-beginblock": "Hash of the first block to begin rescanning",
@@ -818,7 +819,7 @@ func (c *helpCacher) rpcUsage(includeWebsockets bool) (string, error) {
 		}
 	}
 
-	sort.Strings(usageTexts)
+	sort.Sort(sort.StringSlice(usageTexts))
 	c.usage = strings.Join(usageTexts, "\n")
 	return c.usage, nil
 }

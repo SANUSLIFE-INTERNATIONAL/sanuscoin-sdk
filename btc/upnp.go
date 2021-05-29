@@ -1,5 +1,3 @@
-// Copyright © 2021 The Sanuscoin Team
-
 package btc
 
 // Upnp code taken from Taipei Torrent license is below:
