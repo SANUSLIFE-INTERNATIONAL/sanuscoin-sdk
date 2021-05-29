@@ -27,7 +27,7 @@ func newNetConfig() *netConfig {
 }
 
 // ScopeName determines current scope name of the network like:
-// * mainnet - the btc network, that contents real data.
+// * mainnet - the daemon network, that contents real data.
 // * testnet - is an alternative network, to be used for testing.
 func (c *netConfig) ScopeName() string {
 	if c.Testnet {

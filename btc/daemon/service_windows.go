@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btc
+package daemon
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ func logServiceStartOfDay(srvr *server) {
 // updates and launching btcdMain.
 type btcdService struct{}
 
-// Execute is the btc entry point the winsvc package calls when receiving
+// Execute is the daemon entry point the winsvc package calls when receiving
 // information from the Windows service control manager.  It launches the
 // long-running btcdMain (which is the real meat of btcd), handles service
 // change requests, and notifies the service control manager of changes.
@@ -59,7 +59,7 @@ func (s *btcdService) Execute(args []string, r <-chan svc.ChangeRequest, changes
 
 	// Start btcdMain in a separate goroutine so the service can start
 	// quickly.  Shutdown (along with a potential error) is reported via
-	// doneChan.  serverChan is notified with the btc server instance once
+	// doneChan.  serverChan is notified with the daemon server instance once
 	// it is started so it can be gracefully stopped.
 	doneChan := make(chan error)
 	serverChan := make(chan *server)
@@ -85,7 +85,7 @@ loop:
 				// more commands while pending.
 				changes <- svc.Status{State: svc.StopPending}
 
-				// Signal the btc function to exit.
+				// Signal the daemon function to exit.
 				shutdownRequestChannel <- struct{}{}
 
 			default:

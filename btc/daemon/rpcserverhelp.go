@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btc
+package daemon
 
 import (
 	"errors"
@@ -152,8 +152,8 @@ var helpDescsEnUS = map[string]string{
 	"getbestblockresult-height": "Height of the best block",
 
 	// GetBestBlockCmd help.
-	"getbestblock--synopsis": "Get block height and hash of best block in the btc chain.",
-	"getbestblock--result0":  "Get block height and hash of best block in the btc chain.",
+	"getbestblock--synopsis": "Get block height and hash of best block in the daemon chain.",
+	"getbestblock--result0":  "Get block height and hash of best block in the daemon chain.",
 
 	// GetBestBlockHashCmd help.
 	"getbestblockhash--synopsis": "Returns the hash of the of the best (most recent) block in the longest block chain.",
@@ -175,7 +175,7 @@ var helpDescsEnUS = map[string]string{
 	"getblockchaininforesult-chain":                "The name of the chain the daemon is on (testnet, mainnet, etc)",
 	"getblockchaininforesult-blocks":               "The number of blocks in the best known chain",
 	"getblockchaininforesult-headers":              "The number of headers that we've gathered for in the best known chain",
-	"getblockchaininforesult-bestblockhash":        "The block hash for the latest block in the btc chain",
+	"getblockchaininforesult-bestblockhash":        "The block hash for the latest block in the daemon chain",
 	"getblockchaininforesult-difficulty":           "The current chain difficulty",
 	"getblockchaininforesult-mediantime":           "The median time from the PoV of the best block in the chain",
 	"getblockchaininforesult-verificationprogress": "An estimate for how much of the best chain we've verified",
@@ -607,10 +607,10 @@ var helpDescsEnUS = map[string]string{
 	"sessionresult-sessionid": "The unique session ID for a client's websocket connection.",
 
 	// NotifyBlocksCmd help.
-	"notifyblocks--synopsis": "Request notifications for whenever a block is connected or disconnected from the btc (best) chain.",
+	"notifyblocks--synopsis": "Request notifications for whenever a block is connected or disconnected from the daemon (best) chain.",
 
 	// StopNotifyBlocksCmd help.
-	"stopnotifyblocks--synopsis": "Cancel registered notifications for whenever a block is connected or disconnected from the btc (best) chain.",
+	"stopnotifyblocks--synopsis": "Cancel registered notifications for whenever a block is connected or disconnected from the daemon (best) chain.",
 
 	// NotifyNewTransactionsCmd help.
 	"notifynewtransactions--synopsis": "Send either a txaccepted or a txacceptedverbose notification when a new transaction is accepted into the mempool.",
@@ -648,7 +648,7 @@ var helpDescsEnUS = map[string]string{
 
 	// Rescan help.
 	"rescan--synopsis": "Rescan block chain for transactions to addresses.\n" +
-		"When the endblock parameter is omitted, the rescan continues through the best block in the btc chain.\n" +
+		"When the endblock parameter is omitted, the rescan continues through the best block in the daemon chain.\n" +
 		"Rescan results are sent as recvtx and redeemingtx notifications.\n" +
 		"This call returns once the rescan completes.",
 	"rescan-beginblock": "Hash of the first block to begin rescanning",

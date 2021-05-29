@@ -11,7 +11,7 @@ import (
 type Params chaincfg.Params
 
 var (
-	// MainnetParams defines the network parameters for the btc network.
+	// MainnetParams defines the network parameters for the daemon network.
 	MainnetParams = Params{
 		Name: "mainnet",
 		Net:  wire.MainNet,
@@ -65,7 +65,7 @@ var (
 // This may error with ErrDuplicateNet if the network is already registered
 // (either due to a previous Register call, or the network being one of the default networks).
 //
-// Network parameters should be registered into this package by a btc package as early as possible.
+// Network parameters should be registered into this package by a daemon package as early as possible.
 // Then, library packages may lookup networks or network parameters based on inputs and work regardless
 // of the network being standard or not.
 func Register(params *Params) error {

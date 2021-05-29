@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btc
+package daemon
 
 import (
 	"bytes"
@@ -2716,7 +2716,7 @@ func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 
 		// To match the behavior of the reference client, return nil
 		// (JSON null) if the transaction output is spent by another
-		// transaction already in the btc chain.  Mined transactions
+		// transaction already in the daemon chain.  Mined transactions
 		// that are spent by a mempool transaction are not affected by
 		// this.
 		if entry == nil || entry.IsSpent() {
@@ -2782,7 +2782,7 @@ func handleHelp(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (inter
 	}
 
 	// Check that the command asked for is supported and implemented.  Only
-	// search the btc list of handlers since help should not be provided
+	// search the daemon list of handlers since help should not be provided
 	// for commands that are unimplemented or related to wallet
 	// functionality.
 	if _, ok := rpcHandlers[command]; !ok {

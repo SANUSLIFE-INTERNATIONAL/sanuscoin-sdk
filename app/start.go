@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"sanus/sanus-sdk/btc"
+	"sanus/sanus-sdk/btc/daemon"
 
 	"github.com/goava/di"
 	"github.com/urfave/cli/v2"
@@ -36,7 +36,7 @@ func startCommand(dic *di.Container, ctx context.Context, cfg *config.Config, ap
 			return nil
 		},
 		Action: func(c *cli.Context) error {
-			btc.Run(nil)
+			daemon.Run(nil)
 			return nil
 		},
 		After: func(cc *cli.Context) error {

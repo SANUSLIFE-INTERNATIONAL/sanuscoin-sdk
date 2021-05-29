@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btc
+package daemon
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ const (
 )
 
 // appBuild is defined as a variable so it can be overridden during the build
-// process with '-ldflags "-X btc.appBuild foo' if needed.  It MUST only
+// process with '-ldflags "-X daemon.appBuild foo' if needed.  It MUST only
 // contain characters from semanticAlphabet per the semantic versioning spec.
 var appBuild string
 

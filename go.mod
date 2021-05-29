@@ -26,12 +26,12 @@ require (
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 )
 
-replace github.com/btcsuite/btcwallet/walletdb => ./walletdb
+replace github.com/btcsuite/btcwallet/walletdb => ./btc/walletdb
 
-replace github.com/btcsuite/btcwallet/wtxmgr => ./wtxmgr
+replace github.com/btcsuite/btcwallet/wtxmgr => ./btc/wtxmgr
 
-replace github.com/btcsuite/btcwallet/wallet/txauthor => ./wallet/txauthor
+replace github.com/btcsuite/btcwallet/wallet/txauthor => ./btc/wallet/txauthor
 
-replace github.com/btcsuite/btcwallet/wallet/txrules => ./wallet/txrules
+replace github.com/btcsuite/btcwallet/wallet/txrules => ./btc/wallet/txrules
 
-replace github.com/btcsuite/btcwallet/wallet/txsizes => ./wallet/txsizes
+replace github.com/btcsuite/btcwallet/wallet/txsizes => ./btc/wallet/txsizes

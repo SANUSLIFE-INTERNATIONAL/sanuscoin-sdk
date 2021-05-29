@@ -1,4 +1,4 @@
-package btc
+package daemon
 
 import (
 	"io/ioutil"

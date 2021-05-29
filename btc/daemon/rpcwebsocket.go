@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btc
+package daemon
 
 import (
 	"bytes"
@@ -869,7 +869,7 @@ func (m *wsNotificationManager) notifyForNewTx(clients map[chan struct{}]*wsClie
 }
 
 // RegisterSpentRequests requests a notification when each of the passed
-// outpoints is confirmed spent (contained in a block connected to the btc
+// outpoints is confirmed spent (contained in a block connected to the daemon
 // chain) for the passed websocket client.  The request is automatically
 // removed once the notification has been sent.
 func (m *wsNotificationManager) RegisterSpentRequests(wsc *wsClient, ops []*wire.OutPoint) {
@@ -919,7 +919,7 @@ func (m *wsNotificationManager) addSpentRequests(opMap map[wire.OutPoint]map[cha
 
 // UnregisterSpentRequest removes a request from the passed websocket client
 // to be notified when the passed outpoint is confirmed spent (contained in a
-// block connected to the btc chain).
+// block connected to the daemon chain).
 func (m *wsNotificationManager) UnregisterSpentRequest(wsc *wsClient, op *wire.OutPoint) {
 	m.queueNotification <- &notificationUnregisterSpent{
 		wsc: wsc,
@@ -1756,7 +1756,7 @@ func handleWebsocketHelp(wsc *wsClient, icmd interface{}) (interface{}, error) {
 	}
 
 	// Check that the command asked for is supported and implemented.
-	// Search the list of websocket handlers as well as the btc list of
+	// Search the list of websocket handlers as well as the daemon list of
 	// handlers since help should only be provided for those cases.
 	valid := true
 	if _, ok := rpcHandlers[command]; !ok {

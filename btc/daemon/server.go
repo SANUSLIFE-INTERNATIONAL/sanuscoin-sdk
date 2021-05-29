@@ -3,7 +3,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btc
+package daemon
 
 import (
 	"bytes"
@@ -1029,7 +1029,7 @@ func (sp *serverPeer) OnGetCFCheckpt(_ *peer.Peer, msg *wire.MsgGetCFCheckpt) {
 
 	// Now that we know the cache is of an appropriate size, we'll iterate
 	// backwards until the find the block hash. We do this as it's possible
-	// a re-org has occurred so items in the db are now in the btc china
+	// a re-org has occurred so items in the db are now in the daemon china
 	// while the cache has been partially invalidated.
 	var forkIdx int
 	for forkIdx = len(blockHashes); forkIdx > 0; forkIdx-- {
@@ -1077,7 +1077,7 @@ func (sp *serverPeer) OnGetCFCheckpt(_ *peer.Peer, msg *wire.MsgGetCFCheckpt) {
 
 		checkptMsg.AddCFHeader(filterHeader)
 
-		// If the new btc chain is longer than what's in the cache,
+		// If the new daemon chain is longer than what's in the cache,
 		// then we'll override it beyond the fork point.
 		if updateCache {
 			checkptCache[forkIdx+i] = cfHeaderKV{
@@ -1369,7 +1369,7 @@ func (s *server) AnnounceNewTransactions(txns []*mempool.TxDesc) {
 	}
 }
 
-// Transaction has one confirmation on the btc chain. Now we can mark it as no
+// Transaction has one confirmation on the daemon chain. Now we can mark it as no
 // longer needing rebroadcasting.
 func (s *server) TransactionConfirmed(tx *btcutil.Tx) {
 	// Rebroadcasting is only necessary when the RPC server is active.
@@ -2239,7 +2239,7 @@ func (s *server) NetTotals() (uint64, uint64) {
 }
 
 // UpdatePeerHeights updates the heights of all peers who have have announced
-// the latest connected btc chain block, or a recognized orphan. These height
+// the latest connected daemon chain block, or a recognized orphan. These height
 // updates allow us to dynamically refresh peer heights, ensuring sync peer
 // selection has access to the latest block heights for each peer.
 func (s *server) UpdatePeerHeights(latestBlkHash *chainhash.Hash, latestHeight int32, updateSource *peer.Peer) {
@@ -2347,7 +2347,7 @@ func (s *server) Start() {
 }
 
 // Stop gracefully shuts down the server by stopping and disconnecting all
-// peers and the btc listener.
+// peers and the daemon listener.
 func (s *server) Stop() error {
 	// Make sure this only happens once.
 	if atomic.AddInt32(&s.shutdown, 1) != 1 {
@@ -2378,7 +2378,7 @@ func (s *server) Stop() error {
 	return nil
 }
 
-// WaitForShutdown blocks until the btc listener and peer handlers are stopped.
+// WaitForShutdown blocks until the daemon listener and peer handlers are stopped.
 func (s *server) WaitForShutdown() {
 	s.wg.Wait()
 }
