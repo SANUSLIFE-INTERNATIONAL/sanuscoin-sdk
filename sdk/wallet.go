@@ -1,4 +1,4 @@
-package wallet_btc
+package sdk
 
 type IWallet interface {
 	Create() IWallet
