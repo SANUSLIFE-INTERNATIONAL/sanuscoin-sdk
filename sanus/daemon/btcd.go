@@ -142,7 +142,7 @@ func Run(serverChan chan<- *server) error {
 
 	// Create server and start it.
 	server, err := newServer(cfg.Listeners, cfg.AgentBlacklist,
-		cfg.AgentWhitelist, db, activeNetParams.Params, interrupt)
+		cfg.AgentWhitelist, db, ActiveNetParams.Params, interrupt)
 	if err != nil {
 		// TODO: this logging could do with some beautifying.
 		btcdLog.Errorf("Unable to start server on %v: %v",
@@ -267,7 +267,7 @@ func loadBlockDB() (database.DB, error) {
 	removeRegressionDB(dbPath)
 
 	btcdLog.Infof("Loading block database from '%s'", dbPath)
-	db, err := database.Open(cfg.DbType, dbPath, activeNetParams.Net)
+	db, err := database.Open(cfg.DbType, dbPath, ActiveNetParams.Net)
 	if err != nil {
 		// Return the error if it's not because the database doesn't
 		// exist.
@@ -282,7 +282,7 @@ func loadBlockDB() (database.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		db, err = database.Create(cfg.DbType, dbPath, activeNetParams.Net)
+		db, err = database.Create(cfg.DbType, dbPath, ActiveNetParams.Net)
 		if err != nil {
 			return nil, err
 		}

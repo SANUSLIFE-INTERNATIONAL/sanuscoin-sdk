@@ -30,13 +30,13 @@ import (
 	"github.com/btcsuite/btcd/peer"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/go-socks/socks"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/jessevdk/go-flags"
 )
 
 const (
 	defaultConfigFilename        = "btcd.conf"
 	defaultDataDirname           = "data"
-	defaultLogLevel              = "info"
+	defaultLogLevel              = "critical"
 	defaultLogDirname            = "logs"
 	defaultLogFilename           = "btcd.log"
 	defaultMaxPeers              = 125
@@ -64,16 +64,18 @@ const (
 	sampleConfigFilename         = "sample-btcd.conf"
 	defaultTxIndex               = false
 	defaultAddrIndex             = false
+	DefaultRPCUser               = "sanuscoin"
+	DefaultRPCPassword           = "sanuscoin"
 )
 
 var (
-	defaultHomeDir     = btcutil.AppDataDir("btcd", false)
-	defaultConfigFile  = filepath.Join(defaultHomeDir, defaultConfigFilename)
-	defaultDataDir     = filepath.Join(defaultHomeDir, defaultDataDirname)
+	DefaultHomeDir     = btcutil.AppDataDir("sanuscoin", false)
+	defaultConfigFile  = filepath.Join(DefaultHomeDir, defaultConfigFilename)
+	defaultDataDir     = filepath.Join(DefaultHomeDir, defaultDataDirname)
 	knownDbTypes       = database.SupportedDrivers()
-	defaultRPCKeyFile  = filepath.Join(defaultHomeDir, "rpc.key")
-	defaultRPCCertFile = filepath.Join(defaultHomeDir, "rpc.cert")
-	defaultLogDir      = filepath.Join(defaultHomeDir, defaultLogDirname)
+	defaultRPCKeyFile  = filepath.Join(DefaultHomeDir, "rpc.key")
+	defaultRPCCertFile = filepath.Join(DefaultHomeDir, "rpc.cert")
+	defaultLogDir      = filepath.Join(DefaultHomeDir, defaultLogDirname)
 )
 
 // runServiceCommand is only set to a real function on Windows.  It is used
@@ -186,7 +188,7 @@ type serviceOptions struct {
 func cleanAndExpandPath(path string) string {
 	// Expand initial ~ to OS specific home directory.
 	if strings.HasPrefix(path, "~") {
-		homeDir := filepath.Dir(defaultHomeDir)
+		homeDir := filepath.Dir(DefaultHomeDir)
 		path = strings.Replace(path, "~", homeDir, 1)
 	}
 
@@ -411,7 +413,12 @@ func loadConfig() (*config, []string, error) {
 		MaxPeers:             defaultMaxPeers,
 		BanDuration:          defaultBanDuration,
 		BanThreshold:         defaultBanThreshold,
+		RPCUser:              DefaultRPCUser,
+		RPCPass:              DefaultRPCPassword,
+		RPCLimitPass:         DefaultRPCPassword,
+		RPCLimitUser:         DefaultRPCUser,
 		RPCMaxClients:        defaultMaxRPCClients,
+		DisableTLS:           true,
 		RPCMaxWebsockets:     defaultMaxRPCWebsockets,
 		RPCMaxConcurrentReqs: defaultMaxRPCConcurrentReqs,
 		DataDir:              defaultDataDir,
@@ -432,6 +439,8 @@ func loadConfig() (*config, []string, error) {
 		Generate:             defaultGenerate,
 		TxIndex:              defaultTxIndex,
 		AddrIndex:            defaultAddrIndex,
+		TestNet3:             true,
+		DisableRPC:           false,
 	}
 
 	// Service options which are only added on Windows.
@@ -442,14 +451,6 @@ func loadConfig() (*config, []string, error) {
 	// help message error can be ignored here since they will be caught by
 	// the final parse below.
 	preCfg := cfg
-	preParser := newConfigParser(&preCfg, &serviceOpts, flags.HelpFlag)
-	_, err := preParser.Parse()
-	if err != nil {
-		if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
-			fmt.Fprintln(os.Stderr, err)
-			return nil, nil, err
-		}
-	}
 
 	// Show the version and exit if the version flag was specified.
 	appName := filepath.Base(os.Args[0])
@@ -474,27 +475,23 @@ func loadConfig() (*config, []string, error) {
 	// Load additional config from file.
 	var configFileError error
 	parser := newConfigParser(&cfg, &serviceOpts, flags.Default)
-	if !(preCfg.RegressionTest || preCfg.SimNet) || preCfg.ConfigFile !=
-		defaultConfigFile {
-
-		if _, err := os.Stat(preCfg.ConfigFile); os.IsNotExist(err) {
-			err := createDefaultConfigFile(preCfg.ConfigFile)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating a "+
-					"default config file: %v\n", err)
-			}
-		}
-
-		err := flags.NewIniParser(parser).ParseFile(preCfg.ConfigFile)
+	if _, err := os.Stat(preCfg.ConfigFile); os.IsNotExist(err) {
+		err := createDefaultConfigFile(preCfg.ConfigFile)
 		if err != nil {
-			if _, ok := err.(*os.PathError); !ok {
-				fmt.Fprintf(os.Stderr, "Error parsing config "+
-					"file: %v\n", err)
-				fmt.Fprintln(os.Stderr, usageMessage)
-				return nil, nil, err
-			}
-			configFileError = err
+			fmt.Fprintf(os.Stderr, "Error creating a "+
+				"default config file: %v\n", err)
 		}
+	}
+
+	err := flags.NewIniParser(parser).ParseFile(preCfg.ConfigFile)
+	if err != nil {
+		if _, ok := err.(*os.PathError); !ok {
+			fmt.Fprintf(os.Stderr, "Error parsing config "+
+				"file: %v\n", err)
+			fmt.Fprintln(os.Stderr, usageMessage)
+			return nil, nil, err
+		}
+		configFileError = err
 	}
 
 	// Don't add peers from the config file when in regression test mode.
@@ -502,18 +499,9 @@ func loadConfig() (*config, []string, error) {
 		cfg.AddPeers = nil
 	}
 
-	// Parse command line options again to ensure they take precedence.
-	remainingArgs, err := parser.Parse()
-	if err != nil {
-		if e, ok := err.(*flags.Error); !ok || e.Type != flags.ErrHelp {
-			fmt.Fprintln(os.Stderr, usageMessage)
-		}
-		return nil, nil, err
-	}
-
 	// Create the home directory if it doesn't already exist.
 	funcName := "loadConfig"
-	err = os.MkdirAll(defaultHomeDir, 0700)
+	err = os.MkdirAll(DefaultHomeDir, 0700)
 	if err != nil {
 		// Show a nicer error message if it's because a symlink is
 		// linked to a directory that does not exist (probably because
@@ -537,16 +525,16 @@ func loadConfig() (*config, []string, error) {
 	// while we're at it
 	if cfg.TestNet3 {
 		numNets++
-		activeNetParams = &testNet3Params
+		ActiveNetParams = &testNet3Params
 	}
 	if cfg.RegressionTest {
 		numNets++
-		activeNetParams = &regressionNetParams
+		ActiveNetParams = &regressionNetParams
 	}
 	if cfg.SimNet {
 		numNets++
 		// Also disable dns seeding on the simulation test network.
-		activeNetParams = &simNetParams
+		ActiveNetParams = &simNetParams
 		cfg.DisableDNSSeed = true
 	}
 	if numNets > 1 {
@@ -562,7 +550,7 @@ func loadConfig() (*config, []string, error) {
 	// according to the default of the active network. The set
 	// configuration value takes precedence over the default value for the
 	// selected network.
-	relayNonStd := activeNetParams.RelayNonStdTxs
+	relayNonStd := ActiveNetParams.RelayNonStdTxs
 	switch {
 	case cfg.RelayNonStd && cfg.RejectNonStd:
 		str := "%s: rejectnonstd and relaynonstd cannot be used " +
@@ -585,12 +573,12 @@ func loadConfig() (*config, []string, error) {
 	// means each individual piece of serialized data does not have to
 	// worry about changing names per network and such.
 	cfg.DataDir = cleanAndExpandPath(cfg.DataDir)
-	cfg.DataDir = filepath.Join(cfg.DataDir, netName(activeNetParams))
+	cfg.DataDir = filepath.Join(cfg.DataDir, netName(ActiveNetParams))
 
 	// Append the network type to the log directory so it is "namespaced"
 	// per network in the same fashion as the data directory.
 	cfg.LogDir = cleanAndExpandPath(cfg.LogDir)
-	cfg.LogDir = filepath.Join(cfg.LogDir, netName(activeNetParams))
+	cfg.LogDir = filepath.Join(cfg.LogDir, netName(ActiveNetParams))
 
 	// Special show command to list supported subsystems and exit.
 	if cfg.DebugLevel == "show" {
@@ -699,7 +687,7 @@ func loadConfig() (*config, []string, error) {
 	// we are to connect to.
 	if len(cfg.Listeners) == 0 {
 		cfg.Listeners = []string{
-			net.JoinHostPort("", activeNetParams.DefaultPort),
+			net.JoinHostPort("", ActiveNetParams.DefaultPort),
 		}
 	}
 
@@ -726,6 +714,10 @@ func loadConfig() (*config, []string, error) {
 	// The RPC server is disabled if no username or password is provided.
 	if (cfg.RPCUser == "" || cfg.RPCPass == "") &&
 		(cfg.RPCLimitUser == "" || cfg.RPCLimitPass == "") {
+		btcdLog.Info("RPCUser", cfg.RPCUser)
+		btcdLog.Info("RPCPass", cfg.RPCUser)
+		btcdLog.Info("RPCLimitUser", cfg.RPCLimitUser)
+		btcdLog.Info("RPCLimitPass", cfg.RPCLimitPass)
 		cfg.DisableRPC = true
 	}
 
@@ -741,7 +733,7 @@ func loadConfig() (*config, []string, error) {
 		}
 		cfg.RPCListeners = make([]string, 0, len(addrs))
 		for _, addr := range addrs {
-			addr = net.JoinHostPort(addr, activeNetParams.rpcPort)
+			addr = net.JoinHostPort(addr, ActiveNetParams.rpcPort)
 			cfg.RPCListeners = append(cfg.RPCListeners, addr)
 		}
 	}
@@ -870,7 +862,7 @@ func loadConfig() (*config, []string, error) {
 	// Check mining addresses are valid and saved parsed versions.
 	cfg.miningAddrs = make([]btcutil.Address, 0, len(cfg.MiningAddrs))
 	for _, strAddr := range cfg.MiningAddrs {
-		addr, err := btcutil.DecodeAddress(strAddr, activeNetParams.Params)
+		addr, err := btcutil.DecodeAddress(strAddr, ActiveNetParams.Params)
 		if err != nil {
 			str := "%s: mining address '%s' failed to decode: %v"
 			err := fmt.Errorf(str, funcName, strAddr, err)
@@ -878,7 +870,7 @@ func loadConfig() (*config, []string, error) {
 			fmt.Fprintln(os.Stderr, usageMessage)
 			return nil, nil, err
 		}
-		if !addr.IsForNet(activeNetParams.Params) {
+		if !addr.IsForNet(ActiveNetParams.Params) {
 			str := "%s: mining address '%s' is on the wrong network"
 			err := fmt.Errorf(str, funcName, strAddr)
 			fmt.Fprintln(os.Stderr, err)
@@ -902,12 +894,12 @@ func loadConfig() (*config, []string, error) {
 	// Add default port to all listener addresses if needed and remove
 	// duplicate addresses.
 	cfg.Listeners = normalizeAddresses(cfg.Listeners,
-		activeNetParams.DefaultPort)
+		ActiveNetParams.DefaultPort)
 
 	// Add default port to all rpc listener addresses if needed and remove
 	// duplicate addresses.
 	cfg.RPCListeners = normalizeAddresses(cfg.RPCListeners,
-		activeNetParams.rpcPort)
+		ActiveNetParams.rpcPort)
 
 	// Only allow TLS to be disabled if the RPC is bound to localhost
 	// addresses.
@@ -942,9 +934,9 @@ func loadConfig() (*config, []string, error) {
 	// Add default port to all added peer addresses if needed and remove
 	// duplicate addresses.
 	cfg.AddPeers = normalizeAddresses(cfg.AddPeers,
-		activeNetParams.DefaultPort)
+		ActiveNetParams.DefaultPort)
 	cfg.ConnectPeers = normalizeAddresses(cfg.ConnectPeers,
-		activeNetParams.DefaultPort)
+		ActiveNetParams.DefaultPort)
 
 	// --noonion and --onion do not mix.
 	if cfg.NoOnion && cfg.OnionProxy != "" {
@@ -1086,7 +1078,7 @@ func loadConfig() (*config, []string, error) {
 		btcdLog.Warnf("%v", configFileError)
 	}
 
-	return &cfg, remainingArgs, nil
+	return &cfg, []string{}, nil
 }
 
 // createDefaultConfig copies the file sample-btcd.conf to the given destination path,
