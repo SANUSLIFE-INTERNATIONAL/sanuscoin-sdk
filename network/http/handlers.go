@@ -87,6 +87,13 @@ func (server *HTTPServer) Lock(w http.ResponseWriter, r *http.Request) *AppRespo
 	}
 }
 
+func (server *HTTPServer) Synced(w http.ResponseWriter, r *http.Request) *AppResponse {
+	return &AppResponse{
+		Response: server.wallet.Synced(),
+		Code:     200,
+	}
+}
+
 func (server *HTTPServer) NewAddress(w http.ResponseWriter, r *http.Request) *AppResponse {
 	account := r.FormValue("account")
 	if account == "" {
@@ -119,11 +126,15 @@ func (server *HTTPServer) UnspentTX(w http.ResponseWriter, r *http.Request) *App
 	if err != nil {
 		return &AppResponse{Error: err, Code: 400}
 	}
-	return &AppResponse{Response: txs, Code: 400}
+	return &AppResponse{Response: txs, Code: 200}
 }
 
 func (server *HTTPServer) SNCBalance(w http.ResponseWriter, r *http.Request) *AppResponse {
 	return nil
+}
+
+func (server *HTTPServer) NetworkStatus(w http.ResponseWriter, r *http.Request) *AppResponse {
+	return &AppResponse{Error: nil, Response: server.wallet.NetworkStatus()}
 }
 
 func (server *HTTPServer) BTCBalance(w http.ResponseWriter, r *http.Request) *AppResponse {

@@ -50,12 +50,16 @@ func (server *HTTPServer) router() *mux.Router {
 	wallet.Path("/open").Methods("POST").Handler(appHandler(server.OpenWallet))
 	wallet.Path("/unlock").Methods("POST").Handler(appHandler(server.Unlock))
 	wallet.Path("/lock").Methods("POST").Handler(appHandler(server.Lock))
+	wallet.Path("/synced").Methods("POST").Handler(appHandler(server.Synced))
 
 	address := r.PathPrefix("/address").Subrouter()
 	address.Path("/create").Methods("POST").Handler(appHandler(server.NewAddress))
 
 	tx := r.PathPrefix("/tx").Subrouter()
 	tx.Path("/unspent").Methods("POST").Handler(appHandler(server.UnspentTX))
+
+	network := r.PathPrefix("/network").Subrouter()
+	network.Path("/status").Methods("POST").Handler(appHandler(server.NetworkStatus))
 
 	coreHttp.Handle("/", handlers.CombinedLoggingHandler(server.Out(), routers))
 	return routers

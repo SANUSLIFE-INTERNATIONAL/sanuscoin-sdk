@@ -17,9 +17,10 @@ const (
 	AppMainNetName = "mainnet"
 	AppTestnetName = "testnet"
 
-	appDataPathName = "data"
-	appLogsPathName = "logs"
-	appRootPathName = "sanuscoin"
+	appDataPathName   = "data"
+	appLogsPathName   = "logs"
+	appWalletPathName = "wallet"
+	appRootPathName   = "sanuscoin"
 
 	appConfigFilename = ".env"
 )
@@ -121,6 +122,11 @@ func AppLogPath(fName string) string {
 // AppRootPath return path to application's root dir.
 func AppRootPath() string {
 	return appRootPath
+}
+
+// AppWalletPath return path to application's wallet dir.
+func AppWalletPath() string {
+	return filepath.Join(AppRootPath(), appWalletPathName)
 }
 
 func AppConfigFile() string {
