@@ -12,6 +12,9 @@ import (
 	"path/filepath"
 	"runtime/pprof"
 
+	sanusConf "sanus/sanus-sdk/config"
+	"sanus/sanus-sdk/misc/log"
+
 	"github.com/btcsuite/btcd/blockchain/indexers"
 	"github.com/btcsuite/btcd/database"
 )
@@ -23,6 +26,16 @@ const (
 	blockDbNamePrefix = "blocks"
 )
 
+type BTCDaemon struct {
+	*log.Logger
+
+	baseConfig *sanusConf.Config
+}
+
+func NewBTCDaemon(cfg *sanusConf.Config) *BTCDaemon {
+	return &BTCDaemon{baseConfig: cfg, Logger: log.NewLogger(cfg)}
+}
+
 var (
 	cfg *config
 )
@@ -31,15 +44,17 @@ var (
 // as a service and reacts accordingly.
 var winServiceMain func() (bool, error)
 
-// btcdMain is the real main function for btcd.  It is necessary to work around
+// Start is the real main function for btcd.  It is necessary to work around
 // the fact that deferred functions do not run when os.Exit() is called.  The
 // optional serverChan parameter is mainly used by the service code to be
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
-func Run(serverChan chan<- *server) error {
+func (daemon *BTCDaemon) Start(interrupt chan struct{}) error {
+	daemon.SetOutput(defaultLogFilename, "BTCD")
+	daemon.Info("Start service")
 	// Load configuration and parse command line.  This function also
 	// initializes logging and configures it accordingly.
-	tcfg, _, err := loadConfig()
+	tcfg, _, err := loadConfig(daemon.baseConfig)
 	if err != nil {
 		return err
 	}
@@ -50,24 +65,20 @@ func Run(serverChan chan<- *server) error {
 		}
 	}()
 
-	// Get a channel that will be closed when a shutdown signal has been
-	// triggered either from an OS signal such as SIGINT (Ctrl+C) or from
-	// another subsystem such as the RPC server.
-	interrupt := interruptListener()
-	defer btcdLog.Info("Shutdown complete")
+	defer daemon.Info("Shutdown complete")
 
 	// Show version at startup.
-	btcdLog.Infof("Version %s", version())
+	daemon.Infof("Version %s", version())
 
 	// Enable http profiling server if requested.
 	if cfg.Profile != "" {
 		go func() {
 			listenAddr := net.JoinHostPort("", cfg.Profile)
-			btcdLog.Infof("Profile server listening on %s", listenAddr)
+			daemon.Infof("Profile server listening on %s", listenAddr)
 			profileRedirect := http.RedirectHandler("/debug/pprof",
 				http.StatusSeeOther)
 			http.Handle("/", profileRedirect)
-			btcdLog.Errorf("%v", http.ListenAndServe(listenAddr, nil))
+			daemon.Errorf("%v", http.ListenAndServe(listenAddr, nil))
 		}()
 	}
 
@@ -75,7 +86,7 @@ func Run(serverChan chan<- *server) error {
 	if cfg.CPUProfile != "" {
 		f, err := os.Create(cfg.CPUProfile)
 		if err != nil {
-			btcdLog.Errorf("Unable to create cpu profile: %v", err)
+			daemon.Errorf("Unable to create cpu profile: %v", err)
 			return err
 		}
 		pprof.StartCPUProfile(f)
@@ -97,12 +108,12 @@ func Run(serverChan chan<- *server) error {
 	// Load the block database.
 	db, err := loadBlockDB()
 	if err != nil {
-		btcdLog.Errorf("%v", err)
+		daemon.Errorf("%v", err)
 		return err
 	}
 	defer func() {
 		// Ensure the database is sync'd and closed on shutdown.
-		btcdLog.Infof("Gracefully shutting down the database...")
+		daemon.Infof("Gracefully shutting down the database...")
 		db.Close()
 	}()
 
@@ -145,21 +156,17 @@ func Run(serverChan chan<- *server) error {
 		cfg.AgentWhitelist, db, ActiveNetParams.Params, interrupt)
 	if err != nil {
 		// TODO: this logging could do with some beautifying.
-		btcdLog.Errorf("Unable to start server on %v: %v",
+		daemon.Errorf("Unable to start server on %v: %v",
 			cfg.Listeners, err)
 		return err
 	}
 	defer func() {
-		btcdLog.Infof("Gracefully shutting down the server...")
+		daemon.Infof("Gracefully shutting down the server...")
 		server.Stop()
 		server.WaitForShutdown()
-		srvrLog.Infof("Server shutdown complete")
+		daemon.Infof("Server shutdown complete")
 	}()
 	server.Start()
-	if serverChan != nil {
-		serverChan <- server
-	}
-
 	// Wait until the interrupt signal is received from an OS signal or
 	// shutdown is requested through one of the subsystems such as the RPC
 	// server.

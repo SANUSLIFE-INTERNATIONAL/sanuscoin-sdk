@@ -14,30 +14,23 @@ import (
 const (
 	AppName = "Sanuscoin"
 
-	AppMainnetName = "mainnet"
+	AppMainNetName = "mainnet"
 	AppTestnetName = "testnet"
 
 	appDataPathName = "data"
 	appLogsPathName = "logs"
 	appRootPathName = "sanuscoin"
 
-	appCertPathName     = "cert"
-	appExternalPathName = "external"
-
-	appConfigFilename  = "sanus.conf"
-	appRPCKeyFilename  = "rpc.key"
-	appRPCCertFilename = "rpc.cert"
+	appConfigFilename = ".env"
 )
 
 var (
-	appRootPath    = getRootPath()
-	appLogsPath    = filepath.Join(appRootPath, appLogsPathName)
-	appDataPath    = filepath.Join(appRootPath, appDataPathName)
-	appDataExtPath = filepath.Join(appDataPath, appExternalPathName)
+	appRootPath = getRootPath()
 
-	appConfigFile  = filepath.Join(appRootPath, appConfigFilename)
-	appRPCKeyFile  = filepath.Join(appRootPath, appCertPathName, appRPCKeyFilename)
-	appRPCCertFile = filepath.Join(appRootPath, appCertPathName, appRPCCertFilename)
+	appLogsPath = filepath.Join(appRootPath, appLogsPathName)
+	appDataPath = filepath.Join(appRootPath, appDataPathName)
+
+	appConfigFile = filepath.Join(appRootPath, appConfigFilename)
 )
 
 // returns an operating system specific directory to be used for storing application data for an application.
@@ -103,6 +96,13 @@ func getRootPath() string {
 	return "~/." + appNameLower
 }
 
+func InitPaths(cfg *Config) {
+	subdir := cfg.Net.ScopeName()
+	appRootPath = osAppRootPath()
+	appLogsPath = filepath.Join(appRootPath, subdir, appLogsPathName)
+	appDataPath = filepath.Join(appRootPath, subdir, appDataPathName)
+}
+
 // AppDataPath return path to application's data dir.
 func AppDataPath() string {
 	return appDataPath
@@ -113,25 +113,18 @@ func AppLogsPath() string {
 	return appLogsPath
 }
 
-// AppDataPath return path to application's root dir.
+// AppLogPath return path to specific service log file
+func AppLogPath(fName string) string {
+	return filepath.Join(AppLogsPath(), fName)
+}
+
+// AppRootPath return path to application's root dir.
 func AppRootPath() string {
 	return appRootPath
 }
 
-func AppDataExtPath() string {
-	return appDataExtPath
-}
-
 func AppConfigFile() string {
 	return appConfigFile
-}
-
-func AppRpcKeyFile() string {
-	return appRPCKeyFile
-}
-
-func AppRpcCertFile() string {
-	return appRPCCertFile
 }
 
 // osAppRootPath wraps func os.UserConfigDir.

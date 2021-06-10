@@ -3,7 +3,7 @@
 package app
 
 import (
-	"log"
+	"sanus/sanus-sdk/misc/log"
 
 	"github.com/goava/di"
 	"github.com/urfave/cli/v2"
@@ -16,6 +16,8 @@ type (
 	// App describes cli application.
 	App struct {
 		*cli.App
+
+		*log.Logger
 	}
 
 	// command describes func for append an action to app.
@@ -23,39 +25,26 @@ type (
 )
 
 // command appends a command to application actions list.
-func (app *App) command(
+func (application *App) command(
 	dic *di.Container,
 	ctx context.Context,
 	cfg *config.Config,
 	add command,
 ) {
-	add(dic, ctx, cfg, app)
+	add(dic, ctx, cfg, application)
+}
+
+func (application *App) initLogger() {
+	application.SetOutput(defaultLogFile, "APP")
 }
 
 // newAppCli returns application instance.
 func newAppCli(cfg *config.Config) *App {
+	logger := log.NewLogger(cfg)
 	return &App{
+		Logger: logger,
 		App: &cli.App{
 			Usage: "Sanuscoin regular node CLI",
-			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:        "debug",
-					Usage:       "Show debug info",
-					Aliases:     []string{"D"},
-					Destination: &cfg.App.Debug,
-				},
-				&cli.BoolFlag{
-					Name:        "verbose",
-					Usage:       "Show additional info",
-					Aliases:     []string{"v"},
-					Destination: &cfg.App.Verbose,
-				},
-			},
-			ExitErrHandler: func(_ *cli.Context, err error) {
-				if err != nil {
-					log.Fatalln(err)
-				}
-			},
 		},
 	}
 }

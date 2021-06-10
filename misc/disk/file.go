@@ -15,3 +15,10 @@ const (
 func Create(name string) (*os.File, error) {
 	return os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, DefaultFileMode)
 }
+
+func FileExists(fName string) bool {
+	if _, err := os.Stat(fName); err == nil {
+		return true
+	}
+	return false
+}

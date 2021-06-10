@@ -39,7 +39,7 @@ func logServiceStartOfDay(srvr *server) {
 	message += fmt.Sprintf("Version %s\n", version())
 	message += fmt.Sprintf("Configuration directory: %s\n", DefaultHomeDir)
 	message += fmt.Sprintf("Configuration file: %s\n", cfg.ConfigFile)
-	message += fmt.Sprintf("Data directory: %s\n", cfg.DataDir)
+	message += fmt.Sprintf("Response directory: %s\n", cfg.DataDir)
 
 	elog.Info(1, message)
 }

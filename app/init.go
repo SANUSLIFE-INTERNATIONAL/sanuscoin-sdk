@@ -4,7 +4,6 @@ package app
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/goava/di"
 	"github.com/urfave/cli/v2"
@@ -14,7 +13,7 @@ import (
 )
 
 // initCommand appends initialize action to cli app.
-func initCommand(dic *di.Container, _ context.Context, cfg *config.Config, app *App) {
+func (application *App) initCommand(dic *di.Container, _ context.Context, cfg *config.Config, app *App) {
 	app.Commands = append(app.Commands, &cli.Command{
 		Name:  "init",
 		Usage: "Init config",
@@ -30,16 +29,17 @@ func initCommand(dic *di.Container, _ context.Context, cfg *config.Config, app *
 			if err := dic.Invoke(config.Make); err != nil {
 				return fmt.Errorf("make config: %w", err)
 			}
-
+			application.SetOutput(defaultLogFile, "APP")
+			application.Infof("Creating configuration directory %v  \n", config.AppRootPath())
 			return nil
 		},
 		Action: func(*cli.Context) error {
+			application.Info("Initialize configuration...")
 			// invoke config initializer
 			if err := dic.Invoke(config.Init); err != nil {
 				return fmt.Errorf("init config: %w", err)
 			}
-
-			log.Println("Initial configuration complete")
+			application.Info("Initial configuration complete")
 
 			return nil
 		},

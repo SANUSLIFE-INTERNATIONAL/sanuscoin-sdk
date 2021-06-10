@@ -5,11 +5,16 @@ package main
 import (
 	"log"
 
+	"sanus/sanus-sdk/sanus/daemon"
+	"sanus/sanus-sdk/sanus/sdk"
+
 	"github.com/goava/di"
 
 	"sanus/sanus-sdk/app"
 	"sanus/sanus-sdk/app/context"
 	"sanus/sanus-sdk/config"
+
+	sanusHttp "sanus/sanus-sdk/network/http"
 )
 
 func main() {
@@ -19,10 +24,14 @@ func main() {
 		di.Provide(app.NewApp),
 		// provide the application's context
 		di.Provide(context.NewContext),
-		// application's providers
-		di.Provide(config.NewConfig), // provide the application's config
-		// application's invokers
-		di.Invoke(config.Load), // invoke config loader
+		// provide the application's config
+		di.Provide(config.NewConfig),
+		// provide the application wallet
+		di.Provide(sdk.NewWallet),
+		// provide the application http server
+		di.Provide(sanusHttp.NewHTTP),
+		// provide the application btcd service
+		di.Provide(daemon.NewBTCDaemon),
 	)
 	if err != nil {
 		log.Fatal(err)

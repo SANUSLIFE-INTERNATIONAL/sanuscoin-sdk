@@ -28,7 +28,7 @@ const (
 )
 
 // versionCommand appends version action to application.
-func versionCommand(_ *di.Container, _ context.Context, _ *config.Config, app *App) {
+func (application *App) versionCommand(_ *di.Container, _ context.Context, _ *config.Config, app *App) {
 	app.Commands = append(app.Commands, &cli.Command{
 		Name:    "version",
 		Usage:   "Show version",

@@ -4,7 +4,6 @@ package context
 
 import (
 	ctx "context"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -61,9 +60,7 @@ func NewContext(cfg *config.Config) Context {
 			syscall.SIGKILL, // killed
 			syscall.SIGTERM, // terminated
 		)
-		sig := <-stop
-		print("\r") // carriage return
-		log.Printf("Received %s signal, shutting down...", sig)
+		<-stop
 		cancel()
 	}()
 

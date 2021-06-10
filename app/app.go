@@ -17,9 +17,9 @@ func NewApp(dic *di.Container, ctx context.Context, cfg *config.Config) *App {
 	app := newAppCli(cfg)
 
 	// append cli commands
-	app.command(dic, ctx, cfg, initCommand)
-	app.command(dic, ctx, cfg, startCommand)
-	app.command(dic, ctx, cfg, versionCommand)
+	app.command(dic, ctx, cfg, app.initCommand)
+	app.command(dic, ctx, cfg, app.startCommand)
+	app.command(dic, ctx, cfg, app.versionCommand)
 
 	return app
 }

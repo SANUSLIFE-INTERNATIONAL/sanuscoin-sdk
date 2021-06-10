@@ -3,21 +3,22 @@
 package config
 
 const (
-	appDefaultName = "SANUSCOIN"
+	appDefaultName      = "SANUSCOIN"
+	appDefaultDebugMode = "info"
 )
 
 type (
 	// appConfig describes application config.
 	appConfig struct {
-		Debug   bool
-		Name    string
-		Verbose bool
+		Debug string
+		Name  string
 	}
 )
 
 // newAppConfig returns app config instance.
 func newAppConfig() *appConfig {
 	return &appConfig{
-		Name: appDefaultName,
+		Name:  appDefaultName,
+		Debug: appDefaultDebugMode,
 	}
 }

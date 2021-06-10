@@ -21,3 +21,12 @@ func MakeDirs(dirs ...string) error {
 	}
 	return nil
 }
+
+// DirExists checks if specific directory exists
+func DirExists(dirName string) bool {
+	info, err := os.Stat(dirName)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
+}

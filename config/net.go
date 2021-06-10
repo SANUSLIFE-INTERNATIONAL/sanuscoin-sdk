@@ -7,6 +7,9 @@ import (
 )
 
 const (
+	defaultHTTPPort = ":8080"
+	defaultRPCPort  = 8090
+
 	netDefaultInterval = time.Second * 30
 	netDefaultTimeout  = time.Second * 3
 
@@ -18,12 +21,16 @@ type (
 	// netConfig describes network config.
 	netConfig struct {
 		Testnet bool
+		Http    string
+		RPC     string
 	}
 )
 
 // newNetConfig returns network config instance.
 func newNetConfig() *netConfig {
-	return &netConfig{}
+	return &netConfig{
+		Http: defaultHTTPPort,
+	}
 }
 
 // ScopeName determines current scope name of the network like:
@@ -33,5 +40,5 @@ func (c *netConfig) ScopeName() string {
 	if c.Testnet {
 		return AppTestnetName
 	}
-	return AppMainnetName
+	return AppMainNetName
 }

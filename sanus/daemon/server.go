@@ -2905,7 +2905,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		// Signal process shutdown when the RPC server requests it.
 		go func() {
 			<-s.rpcServer.RequestedProcessShutdown()
-			shutdownRequestChannel <- struct{}{}
+			btcdLog.Info("BTC rpc  server shutting down")
 		}()
 	}
 

@@ -70,7 +70,7 @@ var helpDescsEnUS = map[string]string{
 	"vinprevout-vout":        "The index of the output being redeemed from the origin transaction (non-coinbase txns only)",
 	"vinprevout-scriptSig":   "The signature script used to redeem the origin transaction as a JSON object (non-coinbase txns only)",
 	"vinprevout-txinwitness": "The witness stack of the passed input, encoded as a JSON string array",
-	"vinprevout-prevOut":     "Data from the origin transaction output with index vout.",
+	"vinprevout-prevOut":     "Response from the origin transaction output with index vout.",
 	"vinprevout-sequence":    "The script sequence number",
 
 	// Vin help.
@@ -317,7 +317,7 @@ var helpDescsEnUS = map[string]string{
 	"getblocktemplateresult-sizelimit":                  "Number of bytes allowed in blocks",
 	"getblocktemplateresult-transactions":               "Array of transactions as JSON objects",
 	"getblocktemplateresult-version":                    "The block version",
-	"getblocktemplateresult-coinbaseaux":                "Data that should be included in the coinbase signature script",
+	"getblocktemplateresult-coinbaseaux":                "Response that should be included in the coinbase signature script",
 	"getblocktemplateresult-coinbasetxn":                "Information about the coinbase transaction",
 	"getblocktemplateresult-coinbasevalue":              "Total amount available for the coinbase in Satoshi",
 	"getblocktemplateresult-workid":                     "This value must be returned with result if provided (not provided)",

@@ -4,7 +4,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -43,18 +42,15 @@ func NewConfig() *Config {
 // Init inits config.
 func Init(cfg *Config) error {
 	// check if configuration already initialized
-
-	log.Println("Initialize configuration...")
 	if cfg.App.Name == "" {
 		cfg.App.Name = appDefaultName
 	}
-
 	return cfg.write()
 }
 
 // Load loads config from .env file.
 func Load(cfg *Config) error {
-	if err := dotenv.Load(); err != nil {
+	if err := dotenv.Load(filepath.Join(appRootPath, dotenvFileName)); err != nil {
 		if os.IsNotExist(err) {
 			cfg = NewConfig()
 			err = cfg.write()
@@ -69,11 +65,7 @@ func Load(cfg *Config) error {
 
 // Make makes config globals.
 func Make(cfg *Config) error {
-	subdir := cfg.Net.ScopeName()
-	appRootPath = osAppRootPath()
-	appLogsPath = filepath.Join(appRootPath, subdir, appLogsPathName)
-	appDataPath = filepath.Join(appRootPath, subdir, appDataPathName)
-
+	InitPaths(cfg)
 	return disk.MakeDirs(
 		appRootPath,
 		appLogsPath,
@@ -128,7 +120,7 @@ func (c *Config) write() (err error) {
 		rows = append(rows, "") // empty line separate config groups
 	}
 
-	file, err := disk.Create(dotenvFileName)
+	file, err := disk.Create(filepath.Join(appRootPath, dotenvFileName))
 	if err != nil {
 		return fmt.Errorf("create file: %w", err)
 	}

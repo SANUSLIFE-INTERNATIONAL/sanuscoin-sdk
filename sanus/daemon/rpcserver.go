@@ -2096,7 +2096,7 @@ func handleGetBlockTemplateProposal(s *rpcServer, request *btcjson.TemplateReque
 	if hexData == "" {
 		return false, &btcjson.RPCError{
 			Code: btcjson.ErrRPCType,
-			Message: fmt.Sprintf("Data must contain the " +
+			Message: fmt.Sprintf("Response must contain the " +
 				"hex-encoded serialized block that is being " +
 				"proposed"),
 		}
@@ -2110,7 +2110,7 @@ func handleGetBlockTemplateProposal(s *rpcServer, request *btcjson.TemplateReque
 	if err != nil {
 		return false, &btcjson.RPCError{
 			Code: btcjson.ErrRPCDeserialization,
-			Message: fmt.Sprintf("Data must be "+
+			Message: fmt.Sprintf("Response must be "+
 				"hexadecimal string (not %q)", hexData),
 		}
 	}

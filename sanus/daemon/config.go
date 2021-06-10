@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	sanusConf "sanus/sanus-sdk/config"
+
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -69,7 +71,7 @@ const (
 )
 
 var (
-	DefaultHomeDir     = btcutil.AppDataDir("sanuscoin", false)
+	DefaultHomeDir     = sanusConf.AppRootPath()
 	defaultConfigFile  = filepath.Join(DefaultHomeDir, defaultConfigFilename)
 	defaultDataDir     = filepath.Join(DefaultHomeDir, defaultDataDirname)
 	knownDbTypes       = database.SupportedDrivers()
@@ -405,7 +407,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 // The above results in btcd functioning properly without any config settings
 // while still allowing the user to override settings with config files and
 // command line options.  Command line options always take precedence.
-func loadConfig() (*config, []string, error) {
+func loadConfig(sConfig *sanusConf.Config) (*config, []string, error) {
 	// Default config.
 	cfg := config{
 		ConfigFile:           defaultConfigFile,
@@ -493,6 +495,8 @@ func loadConfig() (*config, []string, error) {
 		}
 		configFileError = err
 	}
+
+	cfg.TestNet3 = sConfig.Net.Testnet
 
 	// Don't add peers from the config file when in regression test mode.
 	if preCfg.RegressionTest && len(cfg.AddPeers) > 0 {
@@ -733,7 +737,7 @@ func loadConfig() (*config, []string, error) {
 		}
 		cfg.RPCListeners = make([]string, 0, len(addrs))
 		for _, addr := range addrs {
-			addr = net.JoinHostPort(addr, ActiveNetParams.rpcPort)
+			addr = net.JoinHostPort(addr, ActiveNetParams.RPCPort)
 			cfg.RPCListeners = append(cfg.RPCListeners, addr)
 		}
 	}
@@ -899,7 +903,7 @@ func loadConfig() (*config, []string, error) {
 	// Add default port to all rpc listener addresses if needed and remove
 	// duplicate addresses.
 	cfg.RPCListeners = normalizeAddresses(cfg.RPCListeners,
-		ActiveNetParams.rpcPort)
+		ActiveNetParams.RPCPort)
 
 	// Only allow TLS to be disabled if the RPC is bound to localhost
 	// addresses.
