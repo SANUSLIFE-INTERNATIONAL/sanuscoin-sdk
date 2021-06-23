@@ -43,7 +43,7 @@ func getRootPath() string {
 	appNameUpper := string(unicode.ToUpper(rune(AppName[0]))) + AppName[1:]
 	appNameLower := string(unicode.ToLower(rune(AppName[0]))) + AppName[1:]
 
-	// Get the OS specific home directory via the Go standard lib.
+	// Get the OS specific home directory via the Go standard cc.
 	var homeDir string
 	usr, err := user.Current()
 	if err == nil {
@@ -51,7 +51,7 @@ func getRootPath() string {
 	}
 
 	// Fall back to standard HOME environment variable that works for most POSIX OSes if the directory from the
-	// Go standard lib failed.
+	// Go standard cc failed.
 	if err != nil || homeDir == "" {
 		homeDir = os.Getenv("HOME")
 	}

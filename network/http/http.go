@@ -61,6 +61,9 @@ func (server *HTTPServer) router() *mux.Router {
 	network := r.PathPrefix("/network").Subrouter()
 	network.Path("/status").Methods("POST").Handler(appHandler(server.NetworkStatus))
 
+	test := r.PathPrefix("/test").Subrouter()
+	test.Path("/do").Methods("POST").Handler(appHandler(server.TestDo))
+
 	coreHttp.Handle("/", handlers.CombinedLoggingHandler(server.Out(), routers))
 	return routers
 

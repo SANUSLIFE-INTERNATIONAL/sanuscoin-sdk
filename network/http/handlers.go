@@ -52,6 +52,7 @@ func (server *HTTPServer) CreateWallet(w http.ResponseWriter, r *http.Request) *
 func (server *HTTPServer) OpenWallet(w http.ResponseWriter, r *http.Request) *AppResponse {
 	public := r.FormValue("public")
 	if err := server.wallet.Open([]byte(public)); err != nil {
+		server.Errorf("error caused when trying to open wallet | %v", err)
 		return &AppResponse{
 			Error:    err,
 			Response: "Failed",
@@ -84,6 +85,15 @@ func (server *HTTPServer) Lock(w http.ResponseWriter, r *http.Request) *AppRespo
 	return &AppResponse{
 		Response: "Success",
 		Code:     200,
+	}
+}
+
+func (server *HTTPServer) TestDo(w http.ResponseWriter, r *http.Request) *AppResponse {
+	addr, _ := btcutil.DecodeAddress("mtDGWP8WndxgiHP7JoSEotprnUNAqWZwDZ", daemon.ActiveNetParams.Params)
+	balance, err := server.wallet.SNCBalance(addr)
+	return &AppResponse{
+		Response: fmt.Sprintf("Balance:%v", balance),
+		Error:    err,
 	}
 }
 

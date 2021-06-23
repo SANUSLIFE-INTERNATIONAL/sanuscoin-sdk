@@ -85,6 +85,17 @@ func (w *BTCWallet) Lock() {
 	w.lock <- time.Time{}
 }
 
+// Synced method returns true if wallet already synced with blockchain
+func (w *BTCWallet) Synced() bool {
+	return w.wlt.ChainSynced()
+}
+
+// Stop method stops wallet and rpc connection
+func (w *BTCWallet) Stop() {
+	w.rpcClient.Stop()
+	w.wlt.Stop()
+}
+
 // initLogger method initialized logger for current service
 func (w *BTCWallet) initLogger() {
 	w.Logger.SetOutput(defaultLogFName, "WALLET")
@@ -111,15 +122,4 @@ func (w *BTCWallet) lunchRPC() (err error) {
 		w.Infof("rpc client has been launched")
 	}()
 	return err
-}
-
-// Synced method returns true if wallet already synced with blockchain
-func (w *BTCWallet) Synced() bool {
-	return w.wlt.ChainSynced()
-}
-
-// Stop method stops wallet and rpc connection
-func (w *BTCWallet) Stop() {
-	w.rpcClient.Stop()
-	w.wlt.Stop()
 }
