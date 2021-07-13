@@ -21,6 +21,10 @@ var skipFlag byte = 0x80
 var rangeFlag byte = 0x40
 var percentFlag byte = 0x20
 
+func EncodeBulk(data []*PaymentData) []byte {
+	return nil
+}
+
 func DecodeBulk(consume func(int) []byte, paymentsArray []*PaymentData) []*PaymentData {
 	if paymentsArray == nil {
 		paymentsArray = []*PaymentData{}
