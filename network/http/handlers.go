@@ -89,7 +89,8 @@ func (server *HTTPServer) Lock(w http.ResponseWriter, r *http.Request) *AppRespo
 }
 
 func (server *HTTPServer) TestDo(w http.ResponseWriter, r *http.Request) *AppResponse {
-	addr, _ := btcutil.DecodeAddress("mtDGWP8WndxgiHP7JoSEotprnUNAqWZwDZ", daemon.ActiveNetParams.Params)
+	address := r.FormValue("address")
+	addr, _ := btcutil.DecodeAddress(address, daemon.ActiveNetParams.Params)
 	balance, err := server.wallet.SNCBalance(addr)
 	return &AppResponse{
 		Response: fmt.Sprintf("Balance:%v", balance),
