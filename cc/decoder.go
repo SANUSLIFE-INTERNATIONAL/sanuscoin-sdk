@@ -14,59 +14,7 @@ type MultiSigData struct {
 	HashType string
 }
 
-type ColoredData struct {
-	Type        string
-	Protocol    int64
-	Version     int64
-	TorrentHash []byte
-	Sha2        []byte
-	NoRules     bool
-	MultiSig    []MultiSigData
-	Payments    []*regular.PaymentData
-}
 
-func (cd *ColoredData) Encode() (hash []byte, err error) {
-	hash = make([]byte, 0)
-	if cd.Payments == nil || len(cd.Payments) == 0 {
-		return
-	}
-	var opCode []byte
-	var opCodes [][]byte
-	if cd.Type == "burn" {
-		opCodes = BurnOPCodes
-	} else {
-		opCodes = TransferOPCodes
-	}
-
-	protocolByteStr := strconv.FormatInt(cd.Protocol, 16)
-	protocolByte, err := hex.DecodeString(protocolByteStr)
-	if err != nil {
-		return
-	}
-	versionByteStr := strconv.FormatInt(cd.Version, 16)
-	versionByte, err := hex.DecodeString(versionByteStr)
-	if err != nil {
-		return
-	}
-	transferHeader := append(protocolByte, versionByte...)
-	var paymentByte []byte
-	if cd.Type == "burn" {
-		paymentByte = burn.EncodeBulk(cd.Payments)
-	} else {
-		paymentByte = regular.EncodeBulk(cd.Payments)
-	}
-
-	if len(cd.Sha2) == 0 {
-		//@TODO
-		opCode = opCodes[0]
-	}
-
-	hash = append(hash, transferHeader...)
-	hash = append(hash, paymentByte...)
-	hash = append(hash, opCode...)
-
-	return
-}
 
 func Decode(data []byte) (*ColoredData, error) {
 	var (

@@ -1,6 +1,8 @@
 package sdk
 
 import (
+	"fmt"
+
 	"sanus/sanus-sdk/cc"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -49,6 +51,7 @@ func (w *BTCWallet) SNCBalance(address btcutil.Address) (int, error) {
 				if err != nil {
 					w.Errorf("Error caused when trying to fetch data from PkScript | %v", err)
 				}
+				fmt.Printf("%+v", pkScriptData)
 				for _, p := range pkScriptData.Payments {
 					balance += p.Amount
 				}

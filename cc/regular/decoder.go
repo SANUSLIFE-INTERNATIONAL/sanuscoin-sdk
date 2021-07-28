@@ -6,28 +6,78 @@ import (
 	"strconv"
 
 	"sanus/sanus-sdk/cc/sffc"
+	"sanus/sanus-sdk/cc/utils"
 )
-
-type PaymentData struct {
-	Skip    bool
-	Range   bool
-	Percent bool
-	Output  int64
-	Amount  int
-}
 
 var flagMask byte = 0xe0
 var skipFlag byte = 0x80
 var rangeFlag byte = 0x40
 var percentFlag byte = 0x20
 
-func EncodeBulk(data []*PaymentData) []byte {
-	return nil
+func EncodeBulk(payments []*utils.PaymentData) []byte {
+	var paymentsData = []byte{}
+	var amountOfPayments = len(payments)
+	for x := 0; x < amountOfPayments; x++ {
+		var payment = payments[x]
+		var paymentCode, err = encode(payment)
+		if err != nil {
+			fmt.Println("error caused when trying to encode payment", err)
+			continue
+		}
+		paymentsData = append(paymentsData, paymentCode...)
+	}
+	return paymentsData
+
 }
 
-func DecodeBulk(consume func(int) []byte, paymentsArray []*PaymentData) []*PaymentData {
+func encode(paymentObject *utils.PaymentData) ([]byte, error) {
+	var skip = paymentObject.Skip
+	var rng = paymentObject.Range
+	var percent = paymentObject.Percent
+
+	if paymentObject.Output == 0 {
+		return nil, fmt.Errorf("needs output value")
+	}
+	if paymentObject.Output < 0 {
+		return nil, fmt.Errorf("output can't be negative")
+	}
+	var output = paymentObject.Output
+	if paymentObject.Amount == 0 {
+		return nil, fmt.Errorf("needs amount value")
+	}
+	var amount = paymentObject.Amount
+	var outputBinaryLength = len(strconv.FormatInt(output, 2))
+	if (!rng && outputBinaryLength > 5) || (rng && outputBinaryLength > 13) {
+		return nil, fmt.Errorf("output value is out of bounds")
+	}
+	var rngInt = 0
+	if rng {
+		rngInt = 1
+	}
+	var outputString = utils.PadLeadingZeros(strconv.FormatInt(output, 17), rngInt+1)
+	var buf, err = hex.DecodeString(outputString)
+	if err != nil {
+		return nil, err
+	}
+	if skip {
+		buf[0] = buf[0] | skipFlag
+	}
+	if rng {
+		buf[0] = buf[0] | rangeFlag
+	}
+	if percent {
+		buf[0] = buf[0] | percentFlag
+	}
+	encodedAmount, err := sffc.Encode(amount)
+	if err != nil {
+		return nil, err
+	}
+	return append(buf, encodedAmount...), nil
+}
+
+func DecodeBulk(consume func(int) []byte, paymentsArray []*utils.PaymentData) []*utils.PaymentData {
 	if paymentsArray == nil {
-		paymentsArray = []*PaymentData{}
+		paymentsArray = []*utils.PaymentData{}
 	}
 	for true {
 		paymentData, err := decode(consume)
@@ -40,7 +90,7 @@ func DecodeBulk(consume func(int) []byte, paymentsArray []*PaymentData) []*Payme
 	return paymentsArray
 }
 
-func decode(consume func(int) []byte) (*PaymentData, error) {
+func decode(consume func(int) []byte) (*utils.PaymentData, error) {
 	flagData := consume(1)
 	if len(flagData) == 0 {
 		return nil, fmt.Errorf("no flags are found")
@@ -72,7 +122,7 @@ func decode(consume func(int) []byte) (*PaymentData, error) {
 		return nil, err
 	}
 
-	return &PaymentData{
+	return &utils.PaymentData{
 		Skip:    skip,
 		Range:   rangeF,
 		Percent: percent,
