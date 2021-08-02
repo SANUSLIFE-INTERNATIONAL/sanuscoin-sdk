@@ -60,7 +60,7 @@ func getRootPath() string {
 	// Attempt to use the LOCALAPPDATA or APPDATA environment variable on Windows.
 	case "windows":
 		// Windows XP and before didn't have a LOCALAPPDATA, so fallback
-		// to regular APPDATA when LOCALAPPDATA is not set.
+		// to transfer APPDATA when LOCALAPPDATA is not set.
 		var appData string
 
 		appData = os.Getenv("USERPROFILE")

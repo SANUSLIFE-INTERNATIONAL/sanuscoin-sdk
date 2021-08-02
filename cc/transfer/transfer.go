@@ -1,12 +1,12 @@
-package cc
+package transfer
 
 import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
 
-	"sanus/sanus-sdk/cc/burn"
-	"sanus/sanus-sdk/cc/regular"
+	"sanus/sanus-sdk/cc/encdec"
+	"sanus/sanus-sdk/cc/utils"
 )
 
 type MultiSigData struct {
@@ -15,13 +15,14 @@ type MultiSigData struct {
 }
 
 type ColoredData struct {
+	Type        string
 	Protocol    int64
 	Version     int64
 	TorrentHash []byte
 	Sha2        []byte
 	NoRules     bool
 	MultiSig    []MultiSigData
-	Payments    []*regular.PaymentData
+	Payments    []*utils.PaymentData
 }
 
 func Decode(data []byte) (*ColoredData, error) {
@@ -83,11 +84,87 @@ func Decode(data []byte) (*ColoredData, error) {
 
 	switch paymentEncoder {
 	case "transfer":
-		cData.Payments = regular.DecodeBulk(consume, nil)
+		cData.Payments = encdec.TransferDecodeBulk(consume, nil)
 	case "burn":
-		burn.DecodeBulk(consume)
+		encdec.BurnDecodeBulk(consume)
 	}
 	return cData, err
+}
+
+func (cd *ColoredData) Encode(byteSize int) (hash []byte, err error) {
+	hash = make([]byte, 0)
+	if cd.Payments == nil || len(cd.Payments) == 0 {
+		return
+	}
+	var opCode []byte
+	var opCodes [][]byte
+	if cd.Type == "burn" {
+		opCodes = BurnOPCodes
+	} else {
+		opCodes = TransferOPCodes
+	}
+
+	protocolByteStr := strconv.FormatInt(cd.Protocol, 16)
+	protocolByte, err := hex.DecodeString(protocolByteStr)
+	if err != nil {
+		return
+	}
+	versionByteStr := strconv.FormatInt(cd.Version, 16)
+	versionByte, err := hex.DecodeString(versionByteStr)
+	if err != nil {
+		return
+	}
+	transferHeader := append(protocolByte, versionByte...)
+	var paymentByte []byte
+	if cd.Type == "burn" {
+		paymentByte = encdec.EncodeBulk(cd.Payments)
+	} else {
+		paymentByte = encdec.TransferEncodeBulk(cd.Payments)
+	}
+
+	var issueByteSize = len(transferHeader) + len(paymentByte) + 1
+
+	if issueByteSize > byteSize {
+		return nil, fmt.Errorf("data code is bigger then the allowed byte size")
+	}
+
+	if len(cd.Sha2) == 0 {
+		if len(cd.TorrentHash) > 0 {
+			if cd.NoRules {
+				opCode = opCodes[4]
+			} else {
+				opCode = opCodes[3]
+			}
+			if issueByteSize+len(cd.TorrentHash) > byteSize {
+				return nil, fmt.Errorf("can't fit Torrent Hash in byte size")
+			}
+			return utils.BytesConcat(transferHeader, opCode, cd.TorrentHash, paymentByte), nil
+		}
+
+		return utils.BytesConcat(transferHeader, opCodes[5], hash, paymentByte), nil
+	}
+
+	if len(cd.TorrentHash) == 0 {
+		return nil, fmt.Errorf("torrent Hash is missing")
+	}
+
+	var leftover = [][]byte{
+		cd.TorrentHash,
+		cd.Sha2,
+	}
+
+	opCode = opCodes[2]
+	issueByteSize = issueByteSize + len(cd.TorrentHash)
+	if issueByteSize <= byteSize {
+		hash = utils.BytesConcat(hash, leftover[0])
+		opCode = opCodes[1]
+		issueByteSize = issueByteSize + len(cd.Sha2)
+	}
+	if issueByteSize <= byteSize {
+		hash = utils.BytesConcat(hash, leftover[1])
+		opCode = opCodes[0]
+	}
+	return utils.BytesConcat(transferHeader, opCode, hash, paymentByte), nil
 }
 
 func consumer(buff []byte) func(int) []byte {

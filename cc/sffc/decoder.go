@@ -59,6 +59,10 @@ var (
 	mantisLookup = map[int]SchemeTable{}
 )
 
+const (
+	maxSafeInt = 4294967295
+)
+
 func init() {
 	for i, _ := range encodingSchemeTable {
 		var flagObject = encodingSchemeTable[i]

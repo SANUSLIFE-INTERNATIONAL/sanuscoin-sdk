@@ -1,4 +1,4 @@
-package cc
+package transfer
 
 const (
 	TypeMask     = 0xf0

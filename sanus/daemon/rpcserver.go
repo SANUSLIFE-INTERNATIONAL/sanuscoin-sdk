@@ -1900,7 +1900,7 @@ func handleGetBlockTemplateLongPoll(s *rpcServer, longPollID string, useCoinbase
 
 // handleGetBlockTemplateRequest is a helper for handleGetBlockTemplate which
 // deals with generating and returning block templates to the caller.  It
-// handles both long poll requests as specified by BIP 0022 as well as regular
+// handles both long poll requests as specified by BIP 0022 as well as transfer
 // requests.  In addition, it detects the capabilities reported by the caller
 // in regards to whether or not it supports creating its own coinbase (the
 // coinbasetxn and coinbasevalue capabilities) and modifies the returned block
