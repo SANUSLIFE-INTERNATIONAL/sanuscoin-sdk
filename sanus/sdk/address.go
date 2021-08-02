@@ -22,6 +22,12 @@ func (w *BTCWallet) NewAddress(account string) (btcutil.Address, error) {
 	return addr, nil
 }
 
+// get current address for default (number 0) account,
+// a new address will be generated if not exists yet
+func (w *BTCWallet) defaultAddress() (address btcutil.Address, err error) {
+	return w.wlt.CurrentAddress(0, waddrmgr.KeyScopeBIP0044)
+}
+
 func (w *BTCWallet) SNCBalance(address btcutil.Address) (int, error) {
 	txs, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{
 		address.EncodeAddress(): {},

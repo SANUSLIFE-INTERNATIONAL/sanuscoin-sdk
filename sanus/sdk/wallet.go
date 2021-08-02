@@ -22,6 +22,8 @@ type BTCWallet struct {
 	rpcClient *chain.RPCClient
 	wlt       *wllt.Wallet
 
+	netParams *chaincfg.Params
+
 	cfg *config.Config
 
 	lock chan time.Time
@@ -42,8 +44,16 @@ func NewWallet(cfg *config.Config) *BTCWallet {
 		cfg:    cfg,
 
 		lock: make(chan time.Time, 1),
+
+		netParams: param,
 	}
 }
+
+func (w *BTCWallet) GetNetParams() *chaincfg.Params {
+	return w.netParams
+}
+
+
 
 // Create method creates a new wallet
 func (w *BTCWallet) Create(pubPassphrase, privPassphrase, seed []byte) (err error) {
