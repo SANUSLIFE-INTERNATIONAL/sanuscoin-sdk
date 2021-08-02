@@ -1,4 +1,4 @@
-package regular
+package encdec
 
 import (
 	"encoding/hex"
@@ -14,14 +14,29 @@ var skipFlag byte = 0x80
 var rangeFlag byte = 0x40
 var percentFlag byte = 0x20
 
-func EncodeBulk(payments []*utils.PaymentData) []byte {
+func TransferDecodeBulk(consume func(int) []byte, paymentsArray []*utils.PaymentData) []*utils.PaymentData {
+	if paymentsArray == nil {
+		paymentsArray = []*utils.PaymentData{}
+	}
+	for true {
+		paymentData, err := transferPaymentDecode(consume)
+		if err != nil {
+			return paymentsArray
+		}
+		paymentsArray = append(paymentsArray, paymentData)
+		TransferDecodeBulk(consume, paymentsArray)
+	}
+	return paymentsArray
+}
+
+func TransferEncodeBulk(payments []*utils.PaymentData) []byte {
 	var paymentsData = []byte{}
 	var amountOfPayments = len(payments)
 	for x := 0; x < amountOfPayments; x++ {
 		var payment = payments[x]
-		var paymentCode, err = encode(payment)
+		var paymentCode, err = transferPaymentEncode(payment)
 		if err != nil {
-			fmt.Println("error caused when trying to encode payment", err)
+			fmt.Println("error caused when trying to transferPaymentEncode payment", err)
 			continue
 		}
 		paymentsData = append(paymentsData, paymentCode...)
@@ -30,7 +45,7 @@ func EncodeBulk(payments []*utils.PaymentData) []byte {
 
 }
 
-func encode(paymentObject *utils.PaymentData) ([]byte, error) {
+func transferPaymentEncode(paymentObject *utils.PaymentData) ([]byte, error) {
 	var skip = paymentObject.Skip
 	var rng = paymentObject.Range
 	var percent = paymentObject.Percent
@@ -75,38 +90,23 @@ func encode(paymentObject *utils.PaymentData) ([]byte, error) {
 	return append(buf, encodedAmount...), nil
 }
 
-func DecodeBulk(consume func(int) []byte, paymentsArray []*utils.PaymentData) []*utils.PaymentData {
-	if paymentsArray == nil {
-		paymentsArray = []*utils.PaymentData{}
-	}
-	for true {
-		paymentData, err := decode(consume)
-		if err != nil {
-			return paymentsArray
-		}
-		paymentsArray = append(paymentsArray, paymentData)
-		DecodeBulk(consume, paymentsArray)
-	}
-	return paymentsArray
-}
-
-func decode(consume func(int) []byte) (*utils.PaymentData, error) {
+func transferPaymentDecode(consume func(int) []byte) (*utils.PaymentData, error) {
 	flagData := consume(1)
 	if len(flagData) == 0 {
 		return nil, fmt.Errorf("no flags are found")
 	}
 
 	flagsBuffer := flagData[0]
-	output := []byte{flagsBuffer & ^flagsBuffer}
+	output := []byte{flagsBuffer & flagsBuffer}
 	flags := flagsBuffer & flagMask
 
 	skipB := flags & skipFlag
 	rangeB := flags & rangeFlag
 	percentB := flags & percentFlag
 
-	skip := byteToBool([]byte{skipB})
-	rangeF := byteToBool([]byte{rangeB})
-	percent := byteToBool([]byte{percentB})
+	skip := utils.ByteToBool([]byte{skipB})
+	rangeF := utils.ByteToBool([]byte{rangeB})
+	percent := utils.ByteToBool([]byte{percentB})
 
 	if rangeF {
 		output = append(output, consume(1)...)
@@ -129,12 +129,4 @@ func decode(consume func(int) []byte) (*utils.PaymentData, error) {
 		Output:  outputInt,
 		Amount:  amount,
 	}, nil
-}
-
-func byteToBool(data []byte) bool {
-	res := make([]bool, len(data)*8)
-	for i := range res {
-		res[i] = data[i/8]&(0x80>>byte(i&0x7)) != 0
-	}
-	return res[0]
 }

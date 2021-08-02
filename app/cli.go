@@ -44,7 +44,7 @@ func newAppCli(cfg *config.Config) *App {
 	return &App{
 		Logger: logger,
 		App: &cli.App{
-			Usage: "Sanuscoin regular node CLI",
+			Usage: "Sanuscoin transfer node CLI",
 		},
 	}
 }

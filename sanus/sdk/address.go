@@ -1,9 +1,7 @@
 package sdk
 
 import (
-	"fmt"
-
-	"sanus/sanus-sdk/cc"
+	"sanus/sanus-sdk/cc/transfer"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
@@ -47,11 +45,11 @@ func (w *BTCWallet) SNCBalance(address btcutil.Address) (int, error) {
 		for _, out := range txDetail.MsgTx.TxOut {
 			pkScript := out.PkScript
 			if pkScript[0] == txscript.OP_RETURN {
-				pkScriptData, err := cc.Decode(pkScript)
+				pkScriptData, err := transfer.Decode(pkScript)
 				if err != nil {
 					w.Errorf("Error caused when trying to fetch data from PkScript | %v", err)
 				}
-				fmt.Printf("%+v", pkScriptData)
+
 				for _, p := range pkScriptData.Payments {
 					balance += p.Amount
 				}

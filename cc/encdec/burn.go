@@ -1,10 +1,10 @@
-package burn
+package encdec
 
 import (
 	"sanus/sanus-sdk/cc/utils"
 )
 
-func DecodeBulk(consume func(int) []byte) {
+func BurnDecodeBulk(consume func(int) []byte) {
 
 }
 

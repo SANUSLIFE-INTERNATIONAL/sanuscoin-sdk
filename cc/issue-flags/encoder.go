@@ -61,6 +61,22 @@ func (f *Flags) Encode() ([]byte, error) {
 	return hex.DecodeString(resultString)
 }
 
-func (f *Flags) Decode() {
+func Decode(consume func(int) []byte) *Flags {
+	consumeFirst := consume(1)
+	if len(consumeFirst) == 0 {
+		return nil
+	}
+	var number = consumeFirst[0]
+	number = number >> 2 // least significant 2 bits unused
+	var aggregationPolicy = aggregationPolicies[number&0x3]
+	number = number >> 2
 
+	var lockStatus = !(number&1 == 0)
+	number = number >> 1
+	var divisibility = number & 0x7
+	return &Flags{
+		Divisibility:      int(divisibility),
+		LockStatus:        lockStatus,
+		AggregationPolicy: aggregationPolicy,
+	}
 }
