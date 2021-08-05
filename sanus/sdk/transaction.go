@@ -3,8 +3,8 @@ package sdk
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
@@ -14,8 +14,6 @@ import (
 	"github.com/btcsuite/btcwallet/wallet/txrules"
 	"github.com/btcsuite/btcwallet/wallet/txsizes"
 )
-
-
 
 func (w *BTCWallet) UnspentTx(addr btcutil.Address) ([]string, error) {
 	if err := w.rescan(addr); err != nil {
@@ -34,7 +32,24 @@ func (w *BTCWallet) UnspentTx(addr btcutil.Address) ([]string, error) {
 	return txs, err
 }
 
-func (w *BTCWallet) buildTx(addressTarget btcutil.Address, amountTarget btcutil.Amount, feeLevel FeeLevel) (*wire.MsgTx, error) {
+func (w *BTCWallet) SendTx(address btcutil.Address, amountTarget btcutil.Amount, pkScript []byte) (string, error) {
+	tx, err := w.buildTx(address, amountTarget, 1, pkScript)
+	if err != nil {
+		return "", err
+	}
+	hash, err := w.wlt.ChainClient().SendRawTransaction(tx, false)
+	if err != nil {
+		return "", err
+	}
+	return hash.String(), nil
+}
+
+func (w *BTCWallet) buildTx(
+	addressTarget btcutil.Address,
+	amountTarget btcutil.Amount,
+	feeLevel FeeLevel,
+	pkScript []byte,
+) (*wire.MsgTx, error) {
 	amountIn, txIns, keysByAddrs, prevScripts, err := w.fetchUnspent(amountTarget)
 	if err != nil {
 		return nil, err
@@ -62,6 +77,10 @@ func (w *BTCWallet) buildTx(addressTarget btcutil.Address, amountTarget btcutil.
 			return nil, err
 		}
 		txOutFee = append(txOutFee, wire.NewTxOut(int64(amountChange), script))
+	}
+
+	if pkScript != nil && len(pkScript) > 0 {
+		txOutFee = append(txOutFee, wire.NewTxOut(0, pkScript))
 	}
 
 	targetFee := txrules.FeeForSerializeSize(

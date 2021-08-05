@@ -64,3 +64,7 @@ func (w *BTCWallet) SNCBalance(address btcutil.Address) (int, error) {
 	}
 	return balance, err
 }
+
+func (w *BTCWallet) BTCBalance(address btcutil.Address) (int, error) {
+	return 0, nil
+}

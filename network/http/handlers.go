@@ -2,13 +2,18 @@ package http
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"sanus/sanus-sdk/cc/issuance"
+	"sanus/sanus-sdk/cc/transfer"
 	"sanus/sanus-sdk/misc/random"
 	"sanus/sanus-sdk/sanus/daemon"
 	"sanus/sanus-sdk/sanus/sdk"
 
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 )
 
@@ -88,16 +93,6 @@ func (server *HTTPServer) Lock(w http.ResponseWriter, r *http.Request) *AppRespo
 	}
 }
 
-func (server *HTTPServer) TestDo(w http.ResponseWriter, r *http.Request) *AppResponse {
-	address := r.FormValue("address")
-	addr, _ := btcutil.DecodeAddress(address, daemon.ActiveNetParams.Params)
-	balance, err := server.wallet.SNCBalance(addr)
-	return &AppResponse{
-		Response: fmt.Sprintf("Balance:%v", balance),
-		Error:    err,
-	}
-}
-
 func (server *HTTPServer) Synced(w http.ResponseWriter, r *http.Request) *AppResponse {
 	return &AppResponse{
 		Response: server.wallet.Synced(),
@@ -106,11 +101,18 @@ func (server *HTTPServer) Synced(w http.ResponseWriter, r *http.Request) *AppRes
 }
 
 func (server *HTTPServer) NewAddress(w http.ResponseWriter, r *http.Request) *AppResponse {
-	account := r.FormValue("account")
-	if account == "" {
-		account = random.RandStringRunes(16)
+	var request struct {
+		Account string
 	}
-	address, err := server.wallet.NewAddress(account)
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return &AppResponse{Error: err}
+	}
+
+	if request.Account == "" {
+		request.Account = random.RandStringRunes(16)
+	}
+	address, err := server.wallet.NewAddress(request.Account)
 	if err != nil {
 		return &AppResponse{
 			Error: err,
@@ -125,11 +127,16 @@ func (server *HTTPServer) NewAddress(w http.ResponseWriter, r *http.Request) *Ap
 }
 
 func (server *HTTPServer) UnspentTX(w http.ResponseWriter, r *http.Request) *AppResponse {
-	addr := r.FormValue("address")
-	if addr == "" {
+	var request struct {
+		Address string
+	}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return &AppResponse{Error: err}
+	}
+	if request.Address == "" {
 		return &AppResponse{Error: fmt.Errorf("address can't be empty"), Code: 400}
 	}
-	address, err := btcutil.DecodeAddress(addr, daemon.ActiveNetParams.Params)
+	address, err := btcutil.DecodeAddress(request.Address, daemon.ActiveNetParams.Params)
 	if err != nil {
 		return &AppResponse{Error: err, Code: 400}
 	}
@@ -140,8 +147,88 @@ func (server *HTTPServer) UnspentTX(w http.ResponseWriter, r *http.Request) *App
 	return &AppResponse{Response: txs, Code: 200}
 }
 
-func (server *HTTPServer) SNCBalance(w http.ResponseWriter, r *http.Request) *AppResponse {
-	return nil
+func (server *HTTPServer) Script(w http.ResponseWriter, r *http.Request) *AppResponse {
+	var script []byte
+	var err error
+	if r.URL.Query().Get("type") == "issuance" {
+		var request = struct {
+			data *issuance.ColoredData
+		}{}
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			return &AppResponse{Error: err}
+		}
+		if script, err = request.data.Encode(80); err != nil {
+			return &AppResponse{Error: err}
+		}
+	} else {
+		var request = struct {
+			data *transfer.ColoredData
+		}{}
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			return &AppResponse{Error: err}
+		}
+		if script, err = request.data.Encode(80); err != nil {
+			return &AppResponse{Error: err}
+		}
+	}
+
+	script = append([]byte{txscript.OP_RETURN, byte(len(script))}, script...)
+	scriptStr := hex.EncodeToString(script)
+	return &AppResponse{Response: fmt.Sprintf("Script:%v", scriptStr)}
+}
+
+func (server *HTTPServer) SendTx(w http.ResponseWriter, r *http.Request) *AppResponse {
+	addr := r.FormValue("addr")
+	address, err := btcutil.DecodeAddress(addr, server.wallet.GetNetParams())
+	if err != nil {
+		return &AppResponse{Error: err}
+	}
+	amount := r.FormValue("amount")
+	amountFloat, err := strconv.ParseFloat(amount, 64)
+	if err != nil {
+		return &AppResponse{Error: err}
+	}
+	amountReal, err := btcutil.NewAmount(amountFloat)
+	if err != nil {
+		return &AppResponse{Error: err}
+	}
+	pkScript := r.FormValue("script")
+	pkScriptByte, err := hex.DecodeString(pkScript)
+	if err != nil {
+		return &AppResponse{Error: err}
+	}
+	hash, err := server.wallet.SendTx(address, amountReal, pkScriptByte)
+	if err != nil {
+		return &AppResponse{Error: err}
+	}
+	return &AppResponse{Response: fmt.Sprintf("Hash:%v", hash)}
+}
+
+func (server *HTTPServer) Balance(w http.ResponseWriter, r *http.Request) *AppResponse {
+	address := r.FormValue("address")
+	coin := r.FormValue("coin")
+	if coin == "" {
+		coin = "btc"
+	}
+
+	var addr, err = btcutil.DecodeAddress(address, daemon.ActiveNetParams.Params)
+	if err != nil {
+		return &AppResponse{
+			Response: fmt.Sprintf("Error caused"),
+			Error:    err,
+		}
+	}
+	var balance int
+	switch coin {
+	case "btc":
+		balance, err = server.wallet.BTCBalance(addr)
+	default:
+		balance, err = server.wallet.SNCBalance(addr)
+	}
+	return &AppResponse{
+		Response: fmt.Sprintf("Balance:%v", balance),
+		Error:    err,
+	}
 }
 
 func (server *HTTPServer) NetworkStatus(w http.ResponseWriter, r *http.Request) *AppResponse {

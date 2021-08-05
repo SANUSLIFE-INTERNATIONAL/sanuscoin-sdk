@@ -54,15 +54,15 @@ func (server *HTTPServer) router() *mux.Router {
 
 	address := r.PathPrefix("/address").Subrouter()
 	address.Path("/create").Methods("POST").Handler(appHandler(server.NewAddress))
+	address.Path("/balance").Methods("POST").Handler(appHandler(server.Balance))
 
 	tx := r.PathPrefix("/tx").Subrouter()
 	tx.Path("/unspent").Methods("POST").Handler(appHandler(server.UnspentTX))
+	tx.Path("/send").Methods("POST").Handler(appHandler(server.SendTx))
+	tx.Path("/pk-script").Methods("POST").Handler(appHandler(server.Script))
 
 	network := r.PathPrefix("/network").Subrouter()
 	network.Path("/status").Methods("POST").Handler(appHandler(server.NetworkStatus))
-
-	test := r.PathPrefix("/test").Subrouter()
-	test.Path("/do").Methods("POST").Handler(appHandler(server.TestDo))
 
 	coreHttp.Handle("/", handlers.CombinedLoggingHandler(server.Out(), routers))
 	return routers
