@@ -1,11 +1,11 @@
 package utils
 
 type PaymentData struct {
-	Skip    bool
-	Range   bool
-	Percent bool
-	Output  int64
-	Amount  int
+	Skip    bool  `json:"skip"`
+	Range   bool  `json:"range"`
+	Percent bool  `json:"percent"`
+	Output  int64 `json:"output"`
+	Amount  int   `json:"amount"`
 }
 
 func PadLeadingZeros(hex string, byteSize int) string {

@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ type AppResponse struct {
 
 func (fn appHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resp := fn(w, r)
+	fmt.Printf("%#V \n", resp)
 	response, _ := json.MarshalIndent(resp, "", "")
 	w.Write(response)
 }

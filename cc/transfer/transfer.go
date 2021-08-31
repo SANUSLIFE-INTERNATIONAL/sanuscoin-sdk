@@ -94,7 +94,7 @@ func Decode(data []byte) (*ColoredData, error) {
 func (cd *ColoredData) Encode(byteSize int) (hash []byte, err error) {
 	hash = make([]byte, 0)
 	if cd.Payments == nil || len(cd.Payments) == 0 {
-		return
+		return hash, fmt.Errorf("payment can't be empty")
 	}
 	var opCode []byte
 	var opCodes [][]byte
@@ -109,8 +109,7 @@ func (cd *ColoredData) Encode(byteSize int) (hash []byte, err error) {
 	if err != nil {
 		return
 	}
-	versionByteStr := strconv.FormatInt(cd.Version, 16)
-	versionByte, err := hex.DecodeString(versionByteStr)
+	versionByte := []byte{byte(cd.Version)}
 	if err != nil {
 		return
 	}
@@ -140,7 +139,6 @@ func (cd *ColoredData) Encode(byteSize int) (hash []byte, err error) {
 			}
 			return utils.BytesConcat(transferHeader, opCode, cd.TorrentHash, paymentByte), nil
 		}
-
 		return utils.BytesConcat(transferHeader, opCodes[5], hash, paymentByte), nil
 	}
 

@@ -32,8 +32,8 @@ func (w *BTCWallet) UnspentTx(addr btcutil.Address) ([]string, error) {
 	return txs, err
 }
 
-func (w *BTCWallet) SendTx(address btcutil.Address, amountTarget btcutil.Amount, pkScript []byte) (string, error) {
-	tx, err := w.buildTx(address, amountTarget, 1, pkScript)
+func (w *BTCWallet) SendTx(addressTo btcutil.Address, amountTarget btcutil.Amount, pkScript []byte) (string, error) {
+	tx, err := w.buildTx(addressTo, amountTarget, 1, pkScript)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +45,7 @@ func (w *BTCWallet) SendTx(address btcutil.Address, amountTarget btcutil.Amount,
 }
 
 func (w *BTCWallet) buildTx(
-	addressTarget btcutil.Address,
+	addressTo btcutil.Address,
 	amountTarget btcutil.Amount,
 	feeLevel FeeLevel,
 	pkScript []byte,
@@ -54,11 +54,9 @@ func (w *BTCWallet) buildTx(
 	if err != nil {
 		return nil, err
 	}
-
 	msgTx := wire.NewMsgTx(1)
-
 	// Build the target output
-	script, err := txscript.PayToAddrScript(addressTarget)
+	script, err := txscript.PayToAddrScript(addressTo)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +214,7 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount) (
 func (w *BTCWallet) genCoinSet() (map[coinset.Coin]*hdkeychain.ExtendedKey, error) {
 	coinSet := make(map[coinset.Coin]*hdkeychain.ExtendedKey)
 
-	unspent, err := w.rpcClient.ListUnspent()
+	unspent, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{})
 	if err != nil {
 		return coinSet, err
 	}
@@ -238,7 +236,7 @@ func (w *BTCWallet) genCoinSet() (map[coinset.Coin]*hdkeychain.ExtendedKey, erro
 			return coinSet, err
 		}
 
-		wif, err := w.rpcClient.DumpPrivKey(address)
+		privateKeyAddr, err := w.wlt.PrivKeyForAddress(address)
 		if err != nil {
 			return coinSet, err
 		}
@@ -263,7 +261,7 @@ func (w *BTCWallet) genCoinSet() (map[coinset.Coin]*hdkeychain.ExtendedKey, erro
 
 		coinSet[coin] = hdkeychain.NewExtendedKey(
 			params.HDPrivateKeyID[:],
-			wif.PrivKey.Serialize(),
+			privateKeyAddr.Serialize(),
 			make([]byte, 32),
 			[]byte{0x00, 0x00, 0x00, 0x00},
 			0,

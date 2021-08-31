@@ -25,17 +25,17 @@ var opCodes = [][]byte{
 }
 
 type ColoredData struct {
-	Amount            int
-	Protocol          int64
-	Version           int64
-	Divisibility      int
-	LockStatus        bool
-	AggregationPolicy string
-	MultiSig          []transfer.MultiSigData
-	NoRules           bool
-	Sha2              []byte
-	TorrentHash       []byte
-	Payments          []*utils.PaymentData
+	Amount            int                     `json:"amount"`
+	Protocol          int64                   `json:"protocol"`
+	Version           int64                   `json:"version"`
+	Divisibility      int                     `json:"divisibility"`
+	LockStatus        bool                    `json:"lock_status"`
+	AggregationPolicy string                  `json:"aggregation_policy"`
+	MultiSig          []transfer.MultiSigData `json:"multi_sig"`
+	NoRules           bool                    `json:"no_rules"`
+	Sha2              []byte                  `json:"sha_2"`
+	TorrentHash       []byte                  `json:"torrent_hash"`
+	Payments          []*utils.PaymentData    `json:"payments"`
 }
 
 type Response struct {

@@ -53,8 +53,6 @@ func (w *BTCWallet) GetNetParams() *chaincfg.Params {
 	return w.netParams
 }
 
-
-
 // Create method creates a new wallet
 func (w *BTCWallet) Create(pubPassphrase, privPassphrase, seed []byte) (err error) {
 	w.initLogger()
@@ -87,7 +85,10 @@ func (w *BTCWallet) Open(pubPassphrase []byte) (err error) {
 
 // Unlock method unlocks already initialized wallet
 func (w *BTCWallet) Unlock(privatePassphrase []byte) (err error) {
-	return w.wlt.Unlock(privatePassphrase, w.lock)
+	if w.wlt.Locked() {
+		return w.wlt.Unlock(privatePassphrase, w.lock)
+	}
+	return nil
 }
 
 // Lock method locks already initialized wallet

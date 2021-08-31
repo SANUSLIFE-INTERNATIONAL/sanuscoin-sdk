@@ -49,17 +49,10 @@ func transferPaymentEncode(paymentObject *utils.PaymentData) ([]byte, error) {
 	var skip = paymentObject.Skip
 	var rng = paymentObject.Range
 	var percent = paymentObject.Percent
-
-	if paymentObject.Output == 0 {
-		return nil, fmt.Errorf("needs output value")
-	}
 	if paymentObject.Output < 0 {
 		return nil, fmt.Errorf("output can't be negative")
 	}
 	var output = paymentObject.Output
-	if paymentObject.Amount == 0 {
-		return nil, fmt.Errorf("needs amount value")
-	}
 	var amount = paymentObject.Amount
 	var outputBinaryLength = len(strconv.FormatInt(output, 2))
 	if (!rng && outputBinaryLength > 5) || (rng && outputBinaryLength > 13) {

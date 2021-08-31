@@ -68,6 +68,8 @@ const (
 	defaultAddrIndex             = false
 	DefaultRPCUser               = "sanuscoin"
 	DefaultRPCPassword           = "sanuscoin"
+	DefaultLimitRPCPassword      = "sanuscoin-limit"
+	DefaultLimitRPCUser          = "sanuscoin-limit"
 )
 
 var (
@@ -417,8 +419,8 @@ func loadConfig(sConfig *sanusConf.Config) (*config, []string, error) {
 		BanThreshold:         defaultBanThreshold,
 		RPCUser:              DefaultRPCUser,
 		RPCPass:              DefaultRPCPassword,
-		RPCLimitPass:         DefaultRPCPassword,
-		RPCLimitUser:         DefaultRPCUser,
+		RPCLimitPass:         DefaultLimitRPCPassword,
+		RPCLimitUser:         DefaultLimitRPCUser,
 		RPCMaxClients:        defaultMaxRPCClients,
 		DisableTLS:           true,
 		RPCMaxWebsockets:     defaultMaxRPCWebsockets,

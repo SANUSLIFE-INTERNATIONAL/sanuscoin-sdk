@@ -3844,6 +3844,7 @@ func (s *rpcServer) standardCmdResult(cmd *parsedRPCCmd, closeChan <-chan struct
 	}
 	_, ok = rpcAskWallet[cmd.method]
 	if ok {
+		fmt.Println("CMD.METHOD",cmd.method)
 		handler = handleAskWallet
 		goto handled
 	}
@@ -4073,14 +4074,14 @@ func (s *rpcServer) Start() {
 		// Keep track of the number of connected clients.
 		s.incrementClients()
 		defer s.decrementClients()
-		_, isAdmin, err := s.checkAuth(r, true)
-		if err != nil {
-			jsonAuthFail(w)
-			return
-		}
+		//_, isAdmin, err := s.checkAuth(r, true)
+		//if err != nil {
+		//	jsonAuthFail(w)
+		//	return
+		//}
 
 		// Read and respond to the request.
-		s.jsonRPCRead(w, r, isAdmin)
+		s.jsonRPCRead(w, r, true)
 	})
 
 	// Websocket endpoint.
