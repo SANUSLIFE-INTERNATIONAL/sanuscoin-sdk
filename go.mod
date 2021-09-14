@@ -13,7 +13,6 @@ require (
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792
 	github.com/btcsuite/winsvc v1.0.0
-	github.com/fatih/color v1.12.0
 	github.com/go-errors/errors v1.4.0
 	github.com/goava/di v1.9.0
 	github.com/gorilla/handlers v1.5.1
@@ -27,6 +26,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae // indirect
 )
 
 replace github.com/btcsuite/btcwallet/walletdb v1.0.0 => ./sanus/walletdb

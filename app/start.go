@@ -12,6 +12,7 @@ import (
 	"sanus/sanus-sdk/config"
 	"sanus/sanus-sdk/misc/disk"
 	sanusHttp "sanus/sanus-sdk/network/http"
+	sanusRPC "sanus/sanus-sdk/network/rpc"
 	"sanus/sanus-sdk/sanus/daemon"
 
 	"github.com/goava/di"
@@ -64,6 +65,7 @@ func (application *App) startCommand(dic *di.Container, ctx context.Context, cfg
 
 				btcStopSig    = make(chan struct{}, 1)
 				httpStopSig   = make(chan struct{}, 1)
+				rpcStopSig   = make(chan struct{}, 1)
 				walletStopSig = make(chan struct{}, 1)
 
 				appStopSig = make(chan struct{}, 1)
@@ -80,6 +82,9 @@ func (application *App) startCommand(dic *di.Container, ctx context.Context, cfg
 				close(httpStopSig)
 				application.Info("Stopping HTTP server")
 
+				close(rpcStopSig)
+				application.Info("Stopping RPC server")
+
 				close(appStopSig)
 			}()
 
@@ -88,6 +93,12 @@ func (application *App) startCommand(dic *di.Container, ctx context.Context, cfg
 				return fmt.Errorf("can't fetch http-server from system | %v", err)
 			}
 			go httpSrv.Serve(httpStopSig)
+
+			var rpcSrv *sanusRPC.RPCServer
+			if err := dic.Resolve(&rpcSrv); err != nil {
+				return fmt.Errorf("can't fetch http-server from system | %v", err)
+			}
+			go rpcSrv.Serve(rpcStopSig)
 
 			var btcdService *daemon.BTCDaemon
 			if err := dic.Resolve(&btcdService); err != nil {

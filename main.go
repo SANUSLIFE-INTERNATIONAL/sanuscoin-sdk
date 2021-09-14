@@ -15,6 +15,7 @@ import (
 	"sanus/sanus-sdk/config"
 
 	sanusHttp "sanus/sanus-sdk/network/http"
+	sanusRPC "sanus/sanus-sdk/network/rpc"
 )
 
 func main() {
@@ -30,6 +31,8 @@ func main() {
 		di.Provide(sdk.NewWallet),
 		// provide the application http server
 		di.Provide(sanusHttp.NewHTTP),
+		// provide the application rpc server
+		di.Provide(sanusRPC.New),
 		// provide the application btcd service
 		di.Provide(daemon.NewBTCDaemon),
 	)

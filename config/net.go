@@ -8,7 +8,7 @@ import (
 
 const (
 	defaultHTTPPort = ":8080"
-	defaultRPCPort  = 8090
+	defaultRPCPort  = ":8099"
 
 	netDefaultInterval = time.Second * 30
 	netDefaultTimeout  = time.Second * 3
@@ -30,6 +30,7 @@ type (
 func newNetConfig() *netConfig {
 	return &netConfig{
 		Http: defaultHTTPPort,
+		RPC: defaultRPCPort,
 	}
 }
 
