@@ -63,13 +63,13 @@ func (wallet *Wallet) Unlock(r UnlockWalletRequest, resp *BoolResponse) (err err
 	return
 }
 
-func (wallet *Wallet) Lock(r interface{}, resp BoolResponse) (err error) {
+func (wallet *Wallet) Lock(r interface{}, resp *BoolResponse) (err error) {
 	wallet.wallet.Lock()
 	resp.Success = true
 	return
 }
 
-func (wallet *Wallet) Synced(r interface{}, resp BoolResponse) (err error) {
+func (wallet *Wallet) Synced(r interface{}, resp *BoolResponse) (err error) {
 	resp.Success = wallet.wallet.Synced()
 	return
 }

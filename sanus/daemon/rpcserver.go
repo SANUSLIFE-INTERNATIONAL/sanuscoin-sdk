@@ -3042,7 +3042,7 @@ func handleSearchRawTransactions(s *rpcServer, cmd interface{}, closeChan <-chan
 	if addrIndex == nil {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCMisc,
-			Message: "Address index must be enabled (--addrindex)",
+			Message: "To index must be enabled (--addrindex)",
 		}
 	}
 
@@ -3180,7 +3180,7 @@ func handleSearchRawTransactions(s *rpcServer, cmd interface{}, closeChan <-chan
 		}
 	}
 
-	// Address has never been used if neither source yielded any results.
+	// To has never been used if neither source yielded any results.
 	if len(addressTxns) == 0 {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCNoTxInfo,
@@ -3570,7 +3570,7 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	if _, ok := addr.(*btcutil.AddressPubKeyHash); !ok {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCType,
-			Message: "Address is not a pay-to-pubkey-hash address",
+			Message: "To is not a pay-to-pubkey-hash address",
 		}
 	}
 

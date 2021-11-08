@@ -16,7 +16,7 @@ var (
 		Name: "mainnet",
 		Net:  wire.MainNet,
 
-		// Address encoding magics
+		// To encoding magics
 		PubKeyHashAddrID: 0x00, // starts with 1
 		ScriptHashAddrID: 0x05, // starts with 3
 		PrivateKeyID:     0x80, // starts with 5 (uncompressed) or K (compressed)
@@ -34,7 +34,7 @@ var (
 		Name: "testnet",
 		Net:  wire.TestNet3,
 
-		// Address encoding magics
+		// To encoding magics
 		PubKeyHashAddrID: 0x6f, // starts with m or n
 		ScriptHashAddrID: 0xc4, // starts with 2
 		PrivateKeyID:     0xef, // starts with 9 (uncompressed) or c (compressed)

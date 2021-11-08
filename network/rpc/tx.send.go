@@ -8,7 +8,8 @@ import (
 )
 
 type SendTxRequest struct {
-	Address  string  `json:"address"`
+	To       string  `json:"to"`
+	From     string  `json:"from"`
 	Amount   float64 `json:"amount"`
 	PkScript string  `json:"pk_script"`
 }
@@ -18,7 +19,11 @@ type SendTxResponse struct {
 }
 
 func (tx *Tx) Send(r SendTxRequest, resp *SendTxResponse) (err error) {
-	address, err := btcutil.DecodeAddress(r.Address, tx.wallet.GetNetParams())
+	addressTo, err := btcutil.DecodeAddress(r.To, tx.wallet.GetNetParams())
+	if err != nil {
+		return err
+	}
+	addressFrom, err := btcutil.DecodeAddress(r.From, tx.wallet.GetNetParams())
 	if err != nil {
 		return err
 	}
@@ -38,7 +43,7 @@ func (tx *Tx) Send(r SendTxRequest, resp *SendTxResponse) (err error) {
 			return err
 		}
 	}
-	resp.Hash, err = tx.wallet.SendTx(address, amountReal, pkScriptByte)
+	resp.Hash, err = tx.wallet.SendTx(addressTo, addressFrom, amountReal, pkScriptByte)
 	if err != nil {
 		return fmt.Errorf("error caused when trying to send tx %v", err)
 	}

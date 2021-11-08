@@ -32,8 +32,8 @@ func (w *BTCWallet) UnspentTx(addr btcutil.Address) ([]string, error) {
 	return txs, err
 }
 
-func (w *BTCWallet) SendTx(addressTo btcutil.Address, amountTarget btcutil.Amount, pkScript []byte) (string, error) {
-	tx, err := w.buildTx(addressTo, amountTarget, 1, pkScript)
+func (w *BTCWallet) SendTx(addressTo, addressFrom btcutil.Address, amountTarget btcutil.Amount, pkScript []byte) (string, error) {
+	tx, err := w.buildTx(addressTo, addressFrom, amountTarget, 1, pkScript)
 	if err != nil {
 		return "", err
 	}
@@ -46,14 +46,16 @@ func (w *BTCWallet) SendTx(addressTo btcutil.Address, amountTarget btcutil.Amoun
 
 func (w *BTCWallet) buildTx(
 	addressTo btcutil.Address,
+	addressFrom btcutil.Address,
 	amountTarget btcutil.Amount,
 	feeLevel FeeLevel,
 	pkScript []byte,
 ) (*wire.MsgTx, error) {
-	amountIn, txIns, keysByAddrs, prevScripts, err := w.fetchUnspent(amountTarget)
+	amountIn, txIns, keysByAddrs, prevScripts, err := w.fetchUnspent(amountTarget, addressFrom)
 	if err != nil {
 		return nil, err
 	}
+
 	msgTx := wire.NewMsgTx(1)
 	// Build the target output
 	script, err := txscript.PayToAddrScript(addressTo)
@@ -66,11 +68,7 @@ func (w *BTCWallet) buildTx(
 	amountChange := amountIn - amountTarget
 	if amountChange > 0 {
 		// Build the change output
-		addrChange, err := w.defaultAddress()
-		if err != nil {
-			return nil, err
-		}
-		script, err = txscript.PayToAddrScript(addrChange)
+		script, err = txscript.PayToAddrScript(addressFrom)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +143,7 @@ func (w *BTCWallet) buildTx(
 	return msgTx, nil
 }
 
-func (w *BTCWallet) fetchUnspent(target btcutil.Amount) (
+func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) (
 	amountIn btcutil.Amount,
 	txIns []*wire.TxIn,
 	keysByAddrs map[string]*btcutil.WIF,
@@ -154,7 +152,7 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount) (
 
 	activeNet := w.GetNetParams()
 
-	coinSet, err := w.genCoinSet()
+	coinSet, err := w.genCoinSet(source)
 	if err != nil {
 		return amountIn, txIns, keysByAddrs, prevScripts, err
 	}
@@ -211,10 +209,12 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount) (
 	return amountIn, txIns, keysByAddrs, prevScripts, nil
 }
 
-func (w *BTCWallet) genCoinSet() (map[coinset.Coin]*hdkeychain.ExtendedKey, error) {
+func (w *BTCWallet) genCoinSet(source btcutil.Address) (map[coinset.Coin]*hdkeychain.ExtendedKey, error) {
 	coinSet := make(map[coinset.Coin]*hdkeychain.ExtendedKey)
 
-	unspent, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{})
+	unspent, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{
+		source.String(): {},
+	})
 	if err != nil {
 		return coinSet, err
 	}

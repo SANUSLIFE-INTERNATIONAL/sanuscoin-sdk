@@ -35,7 +35,8 @@ func (server *HTTPServer) UnspentTX(w http.ResponseWriter, r *http.Request) *App
 }
 
 type SendTxRequest struct {
-	Address  string  `json:"address"`
+	To       string  `json:"to"`
+	From     string  `json:"from"`
 	Amount   float64 `json:"amount"`
 	PkScript string  `json:"pk_script"`
 }
@@ -45,7 +46,11 @@ func (server *HTTPServer) SendTx(w http.ResponseWriter, r *http.Request) *AppRes
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return &AppResponse{Error: err}
 	}
-	address, err := btcutil.DecodeAddress(request.Address, server.wallet.GetNetParams())
+	addressTo, err := btcutil.DecodeAddress(request.To, server.wallet.GetNetParams())
+	if err != nil {
+		return &AppResponse{Error: err}
+	}
+	addressFrom, err := btcutil.DecodeAddress(request.From, server.wallet.GetNetParams())
 	if err != nil {
 		return &AppResponse{Error: err}
 	}
@@ -67,7 +72,7 @@ func (server *HTTPServer) SendTx(w http.ResponseWriter, r *http.Request) *AppRes
 			return &AppResponse{Error: err}
 		}
 	}
-	hash, err := server.wallet.SendTx(address, amountReal, pkScriptByte)
+	hash, err := server.wallet.SendTx(addressTo, addressFrom, amountReal, pkScriptByte)
 	if err != nil {
 		return &AppResponse{Error: fmt.Errorf("error caused when trying to send tx %v", err), Code: 400}
 	}

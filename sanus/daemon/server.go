@@ -2652,7 +2652,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		indexes = append(indexes, s.txIndex)
 	}
 	if cfg.AddrIndex {
-		indxLog.Info("Address index is enabled")
+		indxLog.Info("To index is enabled")
 		s.addrIndex = indexers.NewAddrIndex(db, chainParams)
 		indexes = append(indexes, s.addrIndex)
 	}
@@ -2800,7 +2800,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 					break
 				}
 
-				// Address will not be invalid, local or unroutable
+				// To will not be invalid, local or unroutable
 				// because addrmanager rejects those on addition.
 				// Just check that we don't already have an address
 				// in the same group so that we are not connecting
