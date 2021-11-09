@@ -49,7 +49,7 @@ Results:
  Wallet.Synced | {"success":<bool>}
  
  Wallet.NewAddress | {"account":"<account-name>"}
- Wallet.Balance    | {"address":"<wallet-address>"}
+ Wallet.Balance    | {"address":"<wallet-address>","coin":"<btc/snc>"}
  
  
  Tx.Unspent | {"address":"<wallet-address>"}
