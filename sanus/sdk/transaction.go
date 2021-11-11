@@ -65,6 +65,11 @@ func (w *BTCWallet) buildTx(
 	msgTx.AddTxOut(wire.NewTxOut(int64(amountTarget), script))
 
 	txOutFee := msgTx.TxOut
+	if pkScript != nil && len(pkScript) > 0 {
+		msgTx.AddTxOut(wire.NewTxOut(0, pkScript))
+		txOutFee = append(txOutFee, wire.NewTxOut(0, pkScript))
+	}
+
 	amountChange := amountIn - amountTarget
 	if amountChange > 0 {
 		// Build the change output
@@ -75,13 +80,9 @@ func (w *BTCWallet) buildTx(
 		txOutFee = append(txOutFee, wire.NewTxOut(int64(amountChange), script))
 	}
 
-	if pkScript != nil && len(pkScript) > 0 {
-		txOutFee = append(txOutFee, wire.NewTxOut(0, pkScript))
-	}
-
 	targetFee := txrules.FeeForSerializeSize(
 		w.estimateFee(feeLevel),
-		txsizes.EstimateSerializeSize(len(txIns), txOutFee, false))
+		txsizes.EstimateSerializeSize(len(txIns), txOutFee, true))
 
 	// Check for dust output
 	if txrules.IsDustAmount(amountTarget-targetFee, len(script), txrules.DefaultRelayFeePerKb) {
@@ -164,8 +165,10 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) 
 
 	selector := coinset.MaxValueAgeCoinSelector{
 		MaxInputs:       10000,
-		MinChangeAmount: btcutil.Amount(0),
+		MinChangeAmount: 0,
 	}
+
+	target = target + (1 * w.minAmount)
 
 	list, err := selector.CoinSelect(target, coins)
 	if err != nil {

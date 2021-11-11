@@ -8,6 +8,7 @@ import (
 	"sanus/sanus-sdk/misc/log"
 	"sanus/sanus-sdk/sanus/daemon"
 
+	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcwallet/chain"
 	wllt "github.com/btcsuite/btcwallet/wallet"
 	_ "github.com/btcsuite/btcwallet/walletdb/bdb"
@@ -28,6 +29,8 @@ type BTCWallet struct {
 
 	lock chan time.Time
 
+	minAmount btcutil.Amount
+
 	*log.Logger
 }
 
@@ -37,14 +40,17 @@ func NewWallet(cfg *config.Config) *BTCWallet {
 	if !cfg.Net.Testnet {
 		param = &chaincfg.MainNetParams
 	}
+	var minTransactionAmount, err = btcutil.NewAmount(0.00000546)
+	if err != nil {
+		return nil
+	}
 	loader := wllt.NewLoader(param, config.AppWalletPath(), false, 250)
 	return &BTCWallet{
 		loader: loader,
 		Logger: log.NewLogger(cfg),
 		cfg:    cfg,
-
+		minAmount: minTransactionAmount,
 		lock: make(chan time.Time, 1),
-
 		netParams: param,
 	}
 }
