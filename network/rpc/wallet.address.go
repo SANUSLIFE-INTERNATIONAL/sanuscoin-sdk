@@ -29,6 +29,19 @@ func (wallet *Wallet) NewAddress(r NewAddressRequest, resp *NewAddressResponse) 
 	return
 }
 
+type ImportAddressRequest struct {
+	PrivateKey string `json:"privateKey"`
+}
+
+func (wallet *Wallet) ImportAddress(r ImportAddressRequest, resp *NewAddressResponse) (err error) {
+	address, err := wallet.wallet.ImportAddress(r.PrivateKey)
+	if err != nil {
+		return fmt.Errorf("error caused when trying to import address by private key %v", err)
+	}
+	resp.Address = address.EncodeAddress()
+	return
+}
+
 type BalanceRequest struct {
 	Address string `json:"address"`
 	Coin    string `json:"coin"`

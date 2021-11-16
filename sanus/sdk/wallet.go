@@ -46,11 +46,11 @@ func NewWallet(cfg *config.Config) *BTCWallet {
 	}
 	loader := wllt.NewLoader(param, config.AppWalletPath(), false, 250)
 	return &BTCWallet{
-		loader: loader,
-		Logger: log.NewLogger(cfg),
-		cfg:    cfg,
+		loader:    loader,
+		Logger:    log.NewLogger(cfg),
+		cfg:       cfg,
 		minAmount: minTransactionAmount,
-		lock: make(chan time.Time, 1),
+		lock:      make(chan time.Time, 1),
 		netParams: param,
 	}
 }

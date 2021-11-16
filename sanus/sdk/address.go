@@ -12,6 +12,7 @@ import (
 	btcWallet "github.com/btcsuite/btcwallet/wallet"
 )
 
+// NewAddress method generates a new BIP44 address
 func (w *BTCWallet) NewAddress(account string) (btcutil.Address, error) {
 	idx, err := w.wlt.NextAccount(waddrmgr.KeyScopeBIP0044, account)
 	if err != nil {
@@ -22,6 +23,28 @@ func (w *BTCWallet) NewAddress(account string) (btcutil.Address, error) {
 		return nil, err
 	}
 	return addr, nil
+}
+
+// ImportAddress method imports a new address based on privat key
+func (w *BTCWallet) ImportAddress(privateKey string) (btcutil.Address, error) {
+	wif, err := btcutil.DecodeWIF(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	blockStamp := waddrmgr.BlockStamp{
+		Height: 0,
+		Hash:   *w.wlt.ChainParams().GenesisHash,
+	}
+	addr, err := w.wlt.ImportPrivateKey(waddrmgr.KeyScopeBIP0044, wif, &blockStamp, true)
+	if err != nil {
+		return nil, err
+	}
+	decodedAddr, err := btcutil.DecodeAddress(addr, w.netParams)
+	if err != nil {
+		return nil, err
+	}
+	w.rescan(decodedAddr)
+	return decodedAddr, nil
 }
 
 // get current address for default (number 0) account,
