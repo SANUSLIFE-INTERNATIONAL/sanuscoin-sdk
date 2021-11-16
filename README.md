@@ -48,8 +48,9 @@ Results:
  Wallet.Lock   | {"success":<bool>}
  Wallet.Synced | {"success":<bool>}
  
- Wallet.NewAddress | {"account":"<account-name>"}
- Wallet.Balance    | {"address":"<wallet-address>","coin":"<btc/snc>"}
+ Wallet.NewAddress    | {"account":"<account-name>"}
+ Wallet.ImportAddress | {"privateKey":"<private-key-of-address>"}
+ Wallet.Balance       | {"address":"<wallet-address>","coin":"<btc/snc>"}
  
  
  Tx.Unspent | {"address":"<wallet-address>"}
