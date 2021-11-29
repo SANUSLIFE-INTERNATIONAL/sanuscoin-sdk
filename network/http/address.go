@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"sanus/sanus-sdk/misc/random"
 )
 
 type NewAddressRequest struct {
@@ -13,14 +11,7 @@ type NewAddressRequest struct {
 }
 
 func (server *HTTPServer) NewAddress(w http.ResponseWriter, r *http.Request) *AppResponse {
-	var request NewAddressRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return &AppResponse{Error: err}
-	}
-	if request.Account == "" {
-		request.Account = random.RandStringRunes(16)
-	}
-	address, err := server.wallet.NewAddress(request.Account)
+	address, err := server.wallet.NewAddress()
 	if err != nil {
 		return &AppResponse{
 			Error: fmt.Errorf("error caused when trying to generate new address %v", err),
@@ -35,7 +26,7 @@ func (server *HTTPServer) NewAddress(w http.ResponseWriter, r *http.Request) *Ap
 }
 
 type ImportAddressRequest struct {
-	PrivateKey string `json:"privateKey"`
+	PublicKey string `json:"publicKey"`
 }
 
 func (server *HTTPServer) ImportAddress(w http.ResponseWriter, r *http.Request) *AppResponse {
@@ -43,10 +34,10 @@ func (server *HTTPServer) ImportAddress(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return &AppResponse{Error: err}
 	}
-	if request.PrivateKey == "" {
+	if request.PublicKey == "" {
 		return &AppResponse{Error: fmt.Errorf("private key can't be empty")}
 	}
-	address, err := server.wallet.ImportAddress(request.PrivateKey)
+	address, err := server.wallet.ImportAddress(request.PublicKey)
 	if err != nil {
 		return &AppResponse{
 			Error: fmt.Errorf("error caused when trying to generate new address %v", err),
@@ -58,4 +49,9 @@ func (server *HTTPServer) ImportAddress(w http.ResponseWriter, r *http.Request) 
 		Response: address.EncodeAddress(),
 		Code:     200,
 	}
+}
+
+func (server *HTTPServer) ListAddresses(w http.ResponseWriter, r *http.Request) *AppResponse {
+	list, err := server.wallet.List()
+	return &AppResponse{Error: err, Response: list, Code: 200}
 }

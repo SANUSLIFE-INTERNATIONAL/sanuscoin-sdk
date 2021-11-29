@@ -3,8 +3,6 @@ package rpc
 import (
 	"fmt"
 
-	"sanus/sanus-sdk/misc/random"
-
 	"github.com/btcsuite/btcutil"
 )
 
@@ -17,10 +15,7 @@ type NewAddressResponse struct {
 }
 
 func (wallet *Wallet) NewAddress(r NewAddressRequest, resp *NewAddressResponse) (err error) {
-	if r.Account == "" {
-		r.Account = random.RandStringRunes(16)
-	}
-	address, err := wallet.wallet.NewAddress(r.Account)
+	address, err := wallet.wallet.NewAddress()
 	if err != nil {
 		return fmt.Errorf("error caused when trying to generate new address %v", err)
 
@@ -30,11 +25,20 @@ func (wallet *Wallet) NewAddress(r NewAddressRequest, resp *NewAddressResponse) 
 }
 
 type ImportAddressRequest struct {
-	PrivateKey string `json:"privateKey"`
+	PublicKey string `json:"publicKey"`
 }
 
 func (wallet *Wallet) ImportAddress(r ImportAddressRequest, resp *NewAddressResponse) (err error) {
-	address, err := wallet.wallet.ImportAddress(r.PrivateKey)
+	address, err := wallet.wallet.ImportAddress(r.PublicKey)
+	if err != nil {
+		return fmt.Errorf("error caused when trying to import address by private key %v", err)
+	}
+	resp.Address = address.EncodeAddress()
+	return
+}
+
+func (wallet *Wallet) List(r ImportAddressRequest, resp *NewAddressResponse) (err error) {
+	address, err := wallet.wallet.ImportAddress(r.PublicKey)
 	if err != nil {
 		return fmt.Errorf("error caused when trying to import address by private key %v", err)
 	}

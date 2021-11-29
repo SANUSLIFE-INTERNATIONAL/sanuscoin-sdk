@@ -56,6 +56,7 @@ func (server *HTTPServer) router() *mux.Router {
 	address.Path("/create").Methods("POST").Handler(appHandler(server.NewAddress))
 	address.Path("/balance").Methods("POST").Handler(appHandler(server.Balance))
 	address.Path("/import").Methods("POST").Handler(appHandler(server.ImportAddress))
+	address.Path("/list").Methods("POST").Handler(appHandler(server.ListAddresses))
 
 	tx := r.PathPrefix("/tx").Subrouter()
 	tx.Path("/unspent").Methods("POST").Handler(appHandler(server.UnspentTX))

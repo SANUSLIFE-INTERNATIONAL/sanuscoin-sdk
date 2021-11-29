@@ -276,12 +276,13 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address) (map[coinset.Coin]*hdkeyc
 }
 
 func (w *BTCWallet) rescan(addr btcutil.Address) error {
-	nData := w.NetworkStatus()
-	currentBlock := nData.SyncedTo.Height
-	blockHash, err := w.wlt.ChainClient().GetBlockHash(int64(currentBlock - 500))
-	if err != nil {
-		return err
-	}
-	addrs := []btcutil.Address{addr}
-	return w.wlt.ChainClient().Rescan(blockHash, addrs, nil)
+	go func() {
+		w.Logger.Infof("%v addr rescan has been started \n", addr)
+		addrs := []btcutil.Address{addr}
+		if err := w.wlt.ChainClient().Rescan(w.wlt.ChainParams().GenesisHash, addrs, nil); err != nil {
+			w.Logger.Errorf("error caused when trying to rescan %v | %v \n", addr, err)
+		}
+		w.Logger.Errorf("rescan has been finished for %v\n", addr)
+	}()
+	return nil
 }
