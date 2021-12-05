@@ -3,6 +3,8 @@ package sdk
 import (
 	"fmt"
 
+	"sanus/sanus-sdk/cc/transfer"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
@@ -153,7 +155,7 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) 
 
 	activeNet := w.GetNetParams()
 
-	coinSet, err := w.genCoinSet(source)
+	coinSet, err := w.genCoinSet(source, target, 0)
 	if err != nil {
 		return amountIn, txIns, keysByAddrs, prevScripts, err
 	}
@@ -162,21 +164,9 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) 
 	for coin := range coinSet {
 		coins = append(coins, coin)
 	}
+	list := coinset.NewCoinSet(coins)
 
-	selector := coinset.MaxValueAgeCoinSelector{
-		MaxInputs:       10000,
-		MinChangeAmount: 0,
-	}
-
-	target = target + (1 * w.minAmount)
-
-	list, err := selector.CoinSelect(target, coins)
-	if err != nil {
-		if err == coinset.ErrCoinsNoSelectionAvailable {
-			err = ErrorInsufficientFunds
-		}
-		return amountIn, txIns, keysByAddrs, prevScripts, err
-	}
+	target = btcutil.Amount(btcutil.MaxSatoshi)
 
 	keysByAddrs = make(map[string]*btcutil.WIF)
 	prevScripts = make(map[wire.OutPoint][]byte)
@@ -212,8 +202,13 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) 
 	return amountIn, txIns, keysByAddrs, prevScripts, nil
 }
 
-func (w *BTCWallet) genCoinSet(source btcutil.Address) (map[coinset.Coin]*hdkeychain.ExtendedKey, error) {
+func (w *BTCWallet) genCoinSet(source btcutil.Address, targetBTC btcutil.Amount, targetSNC int) (map[coinset.Coin]*hdkeychain.ExtendedKey, error) {
 	coinSet := make(map[coinset.Coin]*hdkeychain.ExtendedKey)
+
+	var (
+		pBTC = btcutil.Amount(0)
+		pSNC = 0
+	)
 
 	unspent, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{
 		source.String(): {},
@@ -254,6 +249,26 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address) (map[coinset.Coin]*hdkeyc
 			return coinSet, err
 		}
 
+		if scriptPubKey[0] == txscript.OP_RETURN {
+			if isSatisfiedSNC(pSNC, targetSNC) {
+				continue
+			}
+
+			pkScriptData, err := transfer.Decode(scriptPubKey)
+			if err != nil {
+				w.Logger.Errorf("error caused when trying to decode OP_RETURN script")
+				continue
+			}
+			for _, p := range pkScriptData.Payments {
+				pSNC = pSNC + p.Amount
+			}
+		} else {
+			if isSatisfiedBTC(pBTC, targetBTC) {
+				continue
+			}
+			pBTC = pBTC + amount
+		}
+
 		coin := &coinBase{
 			TxHash:       txHash,
 			TxIndex:      u.Vout,
@@ -273,6 +288,14 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address) (map[coinset.Coin]*hdkeyc
 	}
 
 	return coinSet, nil
+}
+
+func isSatisfiedSNC(input, target int) bool {
+	return input >= target
+}
+
+func isSatisfiedBTC(input, target btcutil.Amount) bool {
+	return input >= target
 }
 
 func (w *BTCWallet) rescan(addr btcutil.Address) error {

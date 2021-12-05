@@ -78,6 +78,7 @@ func (w *BTCWallet) NewAddress() (btcutil.Address, error) {
 	if err != nil {
 		return nil, err
 	}
+	w.rescan(addr)
 	return addr, nil
 }
 
