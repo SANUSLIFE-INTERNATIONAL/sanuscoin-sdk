@@ -39,6 +39,7 @@ func (w *BTCWallet) SendTx(addressTo, addressFrom btcutil.Address, amountTarget 
 	if err != nil {
 		return "", err
 	}
+	return "", nil
 	hash, err := w.wlt.ChainClient().SendRawTransaction(tx, false)
 	if err != nil {
 		return "", err
@@ -53,7 +54,19 @@ func (w *BTCWallet) buildTx(
 	feeLevel FeeLevel,
 	pkScript []byte,
 ) (*wire.MsgTx, error) {
-	amountIn, txIns, keysByAddrs, prevScripts, err := w.fetchUnspent(amountTarget, addressFrom)
+	var sncTarget int
+	if len(pkScript) == 0 {
+		cData, err := transfer.Decode(pkScript)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, data := range cData.Payments {
+			sncTarget += data.Amount
+		}
+	}
+
+	amountIn, txIns, keysByAddrs, prevScripts, err := w.fetchUnspent(amountTarget, sncTarget, addressFrom)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +159,7 @@ func (w *BTCWallet) buildTx(
 	return msgTx, nil
 }
 
-func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) (
+func (w *BTCWallet) fetchUnspent(target btcutil.Amount, sncTarget int, source btcutil.Address) (
 	amountIn btcutil.Amount,
 	txIns []*wire.TxIn,
 	keysByAddrs map[string]*btcutil.WIF,
@@ -155,7 +168,7 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, source btcutil.Address) 
 
 	activeNet := w.GetNetParams()
 
-	coinSet, err := w.genCoinSet(source, target, 0)
+	coinSet, err := w.genCoinSet(source, target, sncTarget)
 	if err != nil {
 		return amountIn, txIns, keysByAddrs, prevScripts, err
 	}
@@ -249,7 +262,7 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address, targetBTC btcutil.Amount,
 			return coinSet, err
 		}
 
-		if scriptPubKey[0] == txscript.OP_RETURN {
+		if scriptPubKey[0] == txscript.OP_RETURN && targetSNC > 0 {
 			if isSatisfiedSNC(pSNC, targetSNC) {
 				continue
 			}
@@ -285,6 +298,9 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address, targetBTC btcutil.Amount,
 			0,
 			0,
 			true)
+	}
+	if !isSatisfiedSNC(pSNC, targetSNC) || !isSatisfiedBTC(pBTC, targetBTC) {
+		return nil, fmt.Errorf("insufficient funds")
 	}
 
 	return coinSet, nil
