@@ -39,7 +39,6 @@ func (w *BTCWallet) SendTx(addressTo, addressFrom btcutil.Address, amountTarget 
 	if err != nil {
 		return "", err
 	}
-	return "", nil
 	hash, err := w.wlt.ChainClient().SendRawTransaction(tx, false)
 	if err != nil {
 		return "", err
