@@ -54,7 +54,7 @@ func (w *BTCWallet) buildTx(
 	pkScript []byte,
 ) (*wire.MsgTx, error) {
 	var sncTarget int
-	if len(pkScript) == 0 {
+	if len(pkScript) != 0 {
 		cData, err := transfer.Decode(pkScript)
 		if err != nil {
 			return nil, err
