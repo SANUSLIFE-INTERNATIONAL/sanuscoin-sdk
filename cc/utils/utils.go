@@ -1,26 +1,36 @@
 package utils
 
+import (
+	"encoding/json"
+	"math"
+)
+
 type PaymentData struct {
 	Skip    bool  `json:"skip"`
 	Range   bool  `json:"range"`
 	Percent bool  `json:"percent"`
 	Output  int64 `json:"output"`
+	Input   int64 `json:"input"`
 	Amount  int   `json:"amount"`
 }
 
+func (p *PaymentData) String() string {
+	bytes, err := json.Marshal(p)
+	if err != nil {
+		panic(err)
+	}
+	return string(bytes)
+}
+
 func PadLeadingZeros(hex string, byteSize int) string {
-	if len(hex) == byteSize*2 {
+	if byteSize == -1 {
+		byteSize = int(math.Ceil(float64(len(hex) / 2)))
+	}
+
+	if len(hex) == byteSize*2 || byteSize == 0 {
 		return hex
 	}
 	return PadLeadingZeros("0"+hex, byteSize)
-}
-
-func ByteToBool(data []byte) bool {
-	res := make([]bool, len(data)*8)
-	for i := range res {
-		res[i] = data[i/8]&(0x80>>byte(i&0x7)) != 0
-	}
-	return res[0]
 }
 
 func BytesConcat(slices ...[]byte) []byte {

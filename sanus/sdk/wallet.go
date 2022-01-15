@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"sanus/sanus-sdk/config"
+	"sanus/sanus-sdk/kvdb/storage"
 	"sanus/sanus-sdk/misc/log"
 	"sanus/sanus-sdk/sanus/daemon"
 
@@ -32,26 +33,26 @@ type BTCWallet struct {
 	minAmount btcutil.Amount
 
 	*log.Logger
+
+	db *storage.DB
 }
 
 // NewWallet creates a new BTCWallet instance
-func NewWallet(cfg *config.Config) *BTCWallet {
+func NewWallet(cfg *config.Config, db *storage.DB) *BTCWallet {
 	var param = &chaincfg.TestNet3Params
 	if !cfg.Net.Testnet {
 		param = &chaincfg.MainNetParams
 	}
-	var minTransactionAmount, err = btcutil.NewAmount(0.00000546)
-	if err != nil {
-		return nil
-	}
 	loader := wllt.NewLoader(param, config.AppWalletPath(), false, 250)
+	logger := log.NewLogger(cfg)
+	logger.SetPrefix("WLT")
 	return &BTCWallet{
 		loader:    loader,
-		Logger:    log.NewLogger(cfg),
+		Logger:    logger,
 		cfg:       cfg,
-		minAmount: minTransactionAmount,
 		lock:      make(chan time.Time, 1),
 		netParams: param,
+		db:        db,
 	}
 }
 

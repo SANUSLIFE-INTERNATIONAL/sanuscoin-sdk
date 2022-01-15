@@ -23,7 +23,7 @@ func TestCreateOpenFail(t *testing.T) {
 	// Ensure that attempting to open a database that doesn't exist returns
 	// the expected error.
 	wantErr := walletdb.ErrDbDoesNotExist
-	if _, err := walletdb.Open(dbType, "noexist.db"); err != wantErr {
+	if _, err := walletdb.Open(dbType, "noexist.kvdb"); err != wantErr {
 		t.Errorf("Open: did not receive expected error - got %v, "+
 			"want %v", err, wantErr)
 		return
@@ -71,7 +71,7 @@ func TestCreateOpenFail(t *testing.T) {
 
 	// Ensure operations against a closed database return the expected
 	// error.
-	dbPath := "createfail.db"
+	dbPath := "createfail.kvdb"
 	db, err := walletdb.Create(dbType, dbPath)
 	if err != nil {
 		t.Errorf("Create: unexpected error: %v", err)
@@ -92,7 +92,7 @@ func TestCreateOpenFail(t *testing.T) {
 // reopening the database.
 func TestPersistence(t *testing.T) {
 	// Create a new database to run tests against.
-	dbPath := "persistencetest.db"
+	dbPath := "persistencetest.kvdb"
 	db, err := walletdb.Create(dbType, dbPath)
 	if err != nil {
 		t.Errorf("Failed to create test database (%s) %v", dbType, err)

@@ -2,6 +2,7 @@ package sffc
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -82,7 +83,11 @@ func init() {
 }
 
 func Decode(consume func(int) []byte) (int, error) {
-	var flagByte = consume(1)[0]
+	var flagByteC = consume(1)
+	if len(flagByteC) == 0 {
+		return 0, fmt.Errorf("not enough data to determine amount")
+	}
+	var flagByte = flagByteC[0]
 	var flag = flagByte & flagMask
 	if flag == 0 {
 		return int(flagByte), nil

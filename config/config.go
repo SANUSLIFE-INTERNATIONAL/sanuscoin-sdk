@@ -70,6 +70,7 @@ func Make(cfg *Config) error {
 		appRootPath,
 		appLogsPath,
 		appDataPath,
+		appDataPath,
 	)
 }
 

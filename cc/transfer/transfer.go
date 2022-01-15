@@ -31,7 +31,7 @@ func Decode(data []byte) (*ColoredData, error) {
 
 		cData = &ColoredData{}
 
-		consume = consumer(data[2:])
+		consume = consumer(data)
 	)
 
 	protocolStr := hex.EncodeToString(consume(2))

@@ -68,7 +68,13 @@ func Decode(consume func(int) []byte) *Flags {
 	}
 	var number = consumeFirst[0]
 	number = number >> 2 // least significant 2 bits unused
-	var aggregationPolicy = aggregationPolicies[number&0x3]
+	var aggregationPolicy string
+	if int(number&0x3) > len(aggregationPolicies)-1 {
+		aggregationPolicy = "undefined"
+	} else {
+		aggregationPolicy = aggregationPolicies[number&0x3]
+	}
+
 	number = number >> 2
 
 	var lockStatus = !(number&1 == 0)

@@ -68,7 +68,7 @@ func upgradeDBPathNet(oldDbPath, netName string) error {
 		newDbRoot := filepath.Join(filepath.Dir(cfg.DataDir), netName)
 		newDbName := blockDbNamePrefix + "_" + oldDbType
 		if oldDbType == "sqlite" {
-			newDbName = newDbName + ".db"
+			newDbName = newDbName + ".kvdb"
 		}
 		newDbPath := filepath.Join(newDbRoot, newDbName)
 
@@ -91,16 +91,16 @@ func upgradeDBPathNet(oldDbPath, netName string) error {
 // upgradeDBPaths moves the databases from their locations prior to btcd
 // version 0.2.0 to their new locations.
 func upgradeDBPaths() error {
-	// Prior to version 0.2.0, the databases were in the "db" directory and
+	// Prior to version 0.2.0, the databases were in the "kvdb" directory and
 	// their names were suffixed by "testnet" and "regtest" for their
 	// respective networks.  Check for the old database and update it to the
 	// new path introduced with version 0.2.0 accordingly.
-	oldDbRoot := filepath.Join(oldBtcdHomeDir(), "db")
-	upgradeDBPathNet(filepath.Join(oldDbRoot, "btcd.db"), "mainnet")
-	upgradeDBPathNet(filepath.Join(oldDbRoot, "btcd_testnet.db"), "testnet")
-	upgradeDBPathNet(filepath.Join(oldDbRoot, "btcd_regtest.db"), "regtest")
+	oldDbRoot := filepath.Join(oldBtcdHomeDir(), "kvdb")
+	upgradeDBPathNet(filepath.Join(oldDbRoot, "btcd.kvdb"), "mainnet")
+	upgradeDBPathNet(filepath.Join(oldDbRoot, "btcd_testnet.kvdb"), "testnet")
+	upgradeDBPathNet(filepath.Join(oldDbRoot, "btcd_regtest.kvdb"), "regtest")
 
-	// Remove the old db directory.
+	// Remove the old kvdb directory.
 	return os.RemoveAll(oldDbRoot)
 }
 

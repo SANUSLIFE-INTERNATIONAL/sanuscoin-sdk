@@ -146,16 +146,6 @@ func (w *BTCWallet) ImportAddress(publicKey string) (btcutil.Address, error) {
 		return nil, fmt.Errorf("failed to subscribe for address ntfns for "+
 			"address %s: %s", addr.EncodeAddress(), err)
 	}
-	go func() {
-		//an := w.wlt.NtfnServer.AccountNotifications()
-		//an.C <- &btcWallet.AccountNotification{
-		//	AccountNumber:    props.AccountNumber,
-		//	AccountName:      props.AccountName,
-		//	ExternalKeyCount: props.ExternalKeyCount,
-		//	InternalKeyCount: props.InternalKeyCount,
-		//	ImportedKeyCount: props.ImportedKeyCount,
-		//}
-	}()
 	return addr, nil
 }
 
@@ -449,12 +439,9 @@ func (w *BTCWallet) SNCBalance(address btcutil.Address) (int64, error) {
 			pkScript := out.PkScript
 			if pkScript[0] == txscript.OP_RETURN {
 				pkScriptData, err := transfer.Decode(pkScript)
-				fmt.Printf("%#v", pkScriptData)
-				fmt.Printf("%#v", pkScriptData.Payments[0])
 				if err != nil {
 					w.Errorf("Error caused when trying to fetch data from PkScript | %v", err)
 				}
-
 				for _, p := range pkScriptData.Payments {
 					balance += int64(p.Amount)
 				}

@@ -1029,7 +1029,7 @@ func (sp *serverPeer) OnGetCFCheckpt(_ *peer.Peer, msg *wire.MsgGetCFCheckpt) {
 
 	// Now that we know the cache is of an appropriate size, we'll iterate
 	// backwards until the find the block hash. We do this as it's possible
-	// a re-org has occurred so items in the db are now in the daemon china
+	// a re-org has occurred so items in the kvdb are now in the daemon china
 	// while the cache has been partially invalidated.
 	var forkIdx int
 	for forkIdx = len(blockHashes); forkIdx > 0; forkIdx-- {

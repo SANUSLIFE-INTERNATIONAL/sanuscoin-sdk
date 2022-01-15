@@ -14,19 +14,19 @@ var skipFlag byte = 0x80
 var rangeFlag byte = 0x40
 var percentFlag byte = 0x20
 
-func TransferDecodeBulk(consume func(int) []byte, paymentsArray []*utils.PaymentData) []*utils.PaymentData {
+func TransferDecodeBulk(consume func(int) []byte, paymentsArray *[]*utils.PaymentData) []*utils.PaymentData {
 	if paymentsArray == nil {
-		paymentsArray = []*utils.PaymentData{}
+		paymentsArray = &[]*utils.PaymentData{}
 	}
-	for true {
-		paymentData, err := transferPaymentDecode(consume)
-		if err != nil {
-			return paymentsArray
-		}
-		paymentsArray = append(paymentsArray, paymentData)
-		TransferDecodeBulk(consume, paymentsArray)
+
+	paymentData, err := transferPaymentDecode(consume)
+	if err != nil {
+		return nil
 	}
-	return paymentsArray
+	*paymentsArray = append(*paymentsArray, paymentData)
+	TransferDecodeBulk(consume, paymentsArray)
+
+	return *paymentsArray
 }
 
 func TransferEncodeBulk(payments []*utils.PaymentData) []byte {
@@ -88,18 +88,17 @@ func transferPaymentDecode(consume func(int) []byte) (*utils.PaymentData, error)
 	if len(flagData) == 0 {
 		return nil, fmt.Errorf("no flags are found")
 	}
-
 	flagsBuffer := flagData[0]
-	output := []byte{flagsBuffer & flagsBuffer}
+	output := []byte{flagsBuffer & ^flagMask}
 	flags := flagsBuffer & flagMask
 
 	skipB := flags & skipFlag
 	rangeB := flags & rangeFlag
 	percentB := flags & percentFlag
 
-	skip := utils.ByteToBool([]byte{skipB})
-	rangeF := utils.ByteToBool([]byte{rangeB})
-	percent := utils.ByteToBool([]byte{percentB})
+	skip := skipB != 0
+	rangeF := rangeB != 0
+	percent := percentB != 0
 
 	if rangeF {
 		output = append(output, consume(1)...)

@@ -18,6 +18,7 @@ const (
 	AppTestnetName = "testnet"
 
 	appDataPathName   = "data"
+	appDBPathName     = "ccdb"
 	appLogsPathName   = "logs"
 	appWalletPathName = "wallet"
 	appRootPathName   = "sanuscoin"
@@ -30,6 +31,7 @@ var (
 
 	appLogsPath = filepath.Join(appRootPath, appLogsPathName)
 	appDataPath = filepath.Join(appRootPath, appDataPathName)
+	appDBPath   = filepath.Join(appRootPath, appDataPathName)
 
 	appConfigFile = filepath.Join(appRootPath, appConfigFilename)
 )
@@ -106,6 +108,11 @@ func InitPaths(cfg *Config) {
 
 // AppDataPath return path to application's data dir.
 func AppDataPath() string {
+	return appDataPath
+}
+
+// AppDBPath return path to application's kvdb dir.
+func AppDBPath() string {
 	return appDataPath
 }
 

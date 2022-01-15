@@ -441,7 +441,7 @@ func loadConfig(sConfig *sanusConf.Config) (*config, []string, error) {
 		MaxOrphanTxs:         defaultMaxOrphanTransactions,
 		SigCacheMaxSize:      defaultSigCacheMaxSize,
 		Generate:             defaultGenerate,
-		TxIndex:              defaultTxIndex,
+		TxIndex:              true,
 		AddrIndex:            defaultAddrIndex,
 		TestNet3:             true,
 		DisableRPC:           false,

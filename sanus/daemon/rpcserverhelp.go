@@ -73,7 +73,7 @@ var helpDescsEnUS = map[string]string{
 	"vinprevout-prevOut":     "Response from the origin transaction output with index vout.",
 	"vinprevout-sequence":    "The script sequence number",
 
-	// Vin help.
+	// Input help.
 	"vin-coinbase":    "The hex-encoded bytes of the signature script (coinbase txns only)",
 	"vin-txid":        "The hash of the origin transaction (non-coinbase txns only)",
 	"vin-vout":        "The index of the output being redeemed from the origin transaction (non-coinbase txns only)",
@@ -88,7 +88,7 @@ var helpDescsEnUS = map[string]string{
 	"scriptpubkeyresult-type":      "The type of the script (e.g. 'pubkeyhash')",
 	"scriptpubkeyresult-addresses": "The bitcoin addresses associated with this script",
 
-	// Vout help.
+	// Output help.
 	"vout-value":        "The amount in BTC",
 	"vout-n":            "The index of this transaction output",
 	"vout-scriptPubKey": "The public key script used to pay coins as a JSON object",

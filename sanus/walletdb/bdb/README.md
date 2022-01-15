@@ -15,14 +15,14 @@ database path as a string, and an option for the database to not sync its
 freelist to disk as a bool:
 
 ```Go
-db, err := walletdb.Open("bdb", "path/to/database.db", true)
+db, err := walletdb.Open("bdb", "path/to/database.kvdb", true)
 if err != nil {
 	// Handle error
 }
 ```
 
 ```Go
-db, err := walletdb.Create("bdb", "path/to/database.db", true)
+db, err := walletdb.Create("bdb", "path/to/database.kvdb", true)
 if err != nil {
 	// Handle error
 }

@@ -5,6 +5,7 @@ package main
 import (
 	"log"
 
+	"sanus/sanus-sdk/kvdb/storage"
 	"sanus/sanus-sdk/sanus/daemon"
 	"sanus/sanus-sdk/sanus/sdk"
 
@@ -27,6 +28,8 @@ func main() {
 		di.Provide(context.NewContext),
 		// provide the application's config
 		di.Provide(config.NewConfig),
+		// provide the application kvdb
+		di.Provide(storage.New),
 		// provide the application wallet
 		di.Provide(sdk.NewWallet),
 		// provide the application http server

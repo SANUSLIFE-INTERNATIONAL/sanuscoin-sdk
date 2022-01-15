@@ -207,7 +207,7 @@ func blockDbPath(dbType string) string {
 	// The database name is based on the database type.
 	dbName := blockDbNamePrefix + "_" + dbType
 	if dbType == "sqlite" {
-		dbName = dbName + ".db"
+		dbName = dbName + ".kvdb"
 	}
 	dbPath := filepath.Join(cfg.DataDir, dbName)
 	return dbPath
@@ -217,9 +217,9 @@ func blockDbPath(dbType string) string {
 // This is not a situation most users want.  It is handy for development however
 // to support multiple side-by-side databases.
 func warnMultipleDBs() {
-	// This is intentionally not using the known db types which depend
+	// This is intentionally not using the known kvdb types which depend
 	// on the database types compiled into the binary since we want to
-	// detect legacy db types as well.
+	// detect legacy kvdb types as well.
 	dbTypes := []string{"ffldb", "leveldb", "sqlite"}
 	duplicateDbPaths := make([]string, 0, len(dbTypes)-1)
 	for _, dbType := range dbTypes {
@@ -227,7 +227,7 @@ func warnMultipleDBs() {
 			continue
 		}
 
-		// Store db path as a duplicate db if it exists.
+		// Store kvdb path as a duplicate kvdb if it exists.
 		dbPath := blockDbPath(dbType)
 		if fileExists(dbPath) {
 			duplicateDbPaths = append(duplicateDbPaths, dbPath)
@@ -284,7 +284,7 @@ func loadBlockDB() (database.DB, error) {
 			return nil, err
 		}
 
-		// Create the db if it does not exist.
+		// Create the kvdb if it does not exist.
 		err = os.MkdirAll(cfg.DataDir, 0700)
 		if err != nil {
 			return nil, err

@@ -65,7 +65,7 @@ func (application *App) startCommand(dic *di.Container, ctx context.Context, cfg
 
 				btcStopSig    = make(chan struct{}, 1)
 				httpStopSig   = make(chan struct{}, 1)
-				rpcStopSig   = make(chan struct{}, 1)
+				rpcStopSig    = make(chan struct{}, 1)
 				walletStopSig = make(chan struct{}, 1)
 
 				appStopSig = make(chan struct{}, 1)

@@ -16,7 +16,7 @@ import (
 
 // This example demonstrates creating a new database.
 func ExampleCreate() {
-	// This example assumes the bdb (bolt db) driver is imported.
+	// This example assumes the bdb (bolt kvdb) driver is imported.
 	//
 	// import (
 	// 	"github.com/btcsuite/btcwallet/walletdb"
@@ -27,7 +27,7 @@ func ExampleCreate() {
 	// Typically you wouldn't want to remove the database right away like
 	// this, but it's done here in the example to ensure the example cleans
 	// up after itself.
-	dbPath := filepath.Join(os.TempDir(), "examplecreate.db")
+	dbPath := filepath.Join(os.TempDir(), "examplecreate.kvdb")
 	db, err := walletdb.Create("bdb", dbPath)
 	if err != nil {
 		fmt.Println(err)
@@ -45,7 +45,7 @@ var exampleNum = 0
 
 // exampleLoadDB is used in the examples to elide the setup code.
 func exampleLoadDB() (walletdb.DB, func(), error) {
-	dbName := fmt.Sprintf("exampleload%d.db", exampleNum)
+	dbName := fmt.Sprintf("exampleload%d.kvdb", exampleNum)
 	dbPath := filepath.Join(os.TempDir(), dbName)
 	db, err := walletdb.Create("bdb", dbPath)
 	if err != nil {
@@ -99,7 +99,7 @@ func ExampleDB_createTopLevelBucket() {
 // it, and using a managed read-write transaction against the namespace to store
 // and retrieve data.
 func Example_basicUsage() {
-	// This example assumes the bdb (bolt db) driver is imported.
+	// This example assumes the bdb (bolt kvdb) driver is imported.
 	//
 	// import (
 	// 	"github.com/btcsuite/btcwallet/walletdb"
@@ -110,7 +110,7 @@ func Example_basicUsage() {
 	// Typically you wouldn't want to remove the database right away like
 	// this, but it's done here in the example to ensure the example cleans
 	// up after itself.
-	dbPath := filepath.Join(os.TempDir(), "exampleusage.db")
+	dbPath := filepath.Join(os.TempDir(), "exampleusage.kvdb")
 	db, err := walletdb.Create("bdb", dbPath)
 	if err != nil {
 		fmt.Println(err)

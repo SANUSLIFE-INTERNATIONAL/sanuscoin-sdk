@@ -20,7 +20,7 @@ var (
 		Divisibility:      2,
 		LockStatus:        true,
 		AggregationPolicy: "aggregatable",
-		MultiSig: []transfer.MultiSigData{},
+		MultiSig:          []transfer.MultiSigData{},
 		NoRules:           false,
 		Payments: []*utils.PaymentData{
 			{

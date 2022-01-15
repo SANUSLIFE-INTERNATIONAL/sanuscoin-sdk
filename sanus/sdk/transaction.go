@@ -39,11 +39,41 @@ func (w *BTCWallet) SendTx(addressTo, addressFrom btcutil.Address, amountTarget 
 	if err != nil {
 		return "", err
 	}
+	return "", nil
 	hash, err := w.wlt.ChainClient().SendRawTransaction(tx, false)
 	if err != nil {
 		return "", err
 	}
 	return hash.String(), nil
+}
+
+func (w *BTCWallet) Transfer(from, to string, amount, amountBTC int) {
+
+	args := map[string]interface{}{
+		"address":   to,
+		"amount":    amount,
+		"amountBTC": amountBTC,
+		"assetId":   "",
+	}
+
+	buildArgs := map[string]interface{}{
+		"utxos":         []interface{}{},
+		"to":            args,
+		"feePeerKB":     1000,
+		"changeAddress": from,
+	}
+
+	tx := wire.NewMsgTx(1)
+
+	buildSendTransaction(tx, buildArgs)
+}
+
+func buildSendTransaction(tx *wire.MsgTx, args map[string]interface{}) {
+
+}
+
+func (wlt *BTCWallet) getUTXOs(address string) {
+
 }
 
 func (w *BTCWallet) buildTx(
@@ -71,6 +101,7 @@ func (w *BTCWallet) buildTx(
 	}
 
 	msgTx := wire.NewMsgTx(1)
+
 	// Build the target output
 	script, err := txscript.PayToAddrScript(addressTo)
 	if err != nil {
@@ -85,6 +116,8 @@ func (w *BTCWallet) buildTx(
 	}
 
 	amountChange := amountIn - amountTarget
+	txscript.NewScriptBuilder().Script()
+
 	if amountChange > 0 {
 		// Build the change output
 		script, err = txscript.PayToAddrScript(addressFrom)
@@ -177,9 +210,6 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, sncTarget int, source bt
 		coins = append(coins, coin)
 	}
 	list := coinset.NewCoinSet(coins)
-
-	target = btcutil.Amount(btcutil.MaxSatoshi)
-
 	keysByAddrs = make(map[string]*btcutil.WIF)
 	prevScripts = make(map[wire.OutPoint][]byte)
 
@@ -188,6 +218,7 @@ func (w *BTCWallet) fetchUnspent(target btcutil.Amount, sncTarget int, source bt
 		prevScripts[*outpoint] = coin.PkScript()
 
 		txIn := wire.NewTxIn(outpoint, []byte{}, [][]byte{})
+
 		txIn.Sequence = 0 // Opt-in RBF so we can bump fees
 
 		amountIn += coin.Value()
@@ -229,6 +260,10 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address, targetBTC btcutil.Amount,
 		return coinSet, err
 	}
 
+	//for _, x := range unspent {
+	//	//x.Output
+	//}
+
 	params := w.GetNetParams()
 
 	for _, u := range unspent {
@@ -261,7 +296,7 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address, targetBTC btcutil.Amount,
 			return coinSet, err
 		}
 
-		if scriptPubKey[0] == txscript.OP_RETURN && targetSNC > 0 {
+		if u.ScriptPubKey[0] == txscript.OP_RETURN && targetSNC > 0 {
 			if isSatisfiedSNC(pSNC, targetSNC) {
 				continue
 			}
@@ -274,12 +309,12 @@ func (w *BTCWallet) genCoinSet(source btcutil.Address, targetBTC btcutil.Amount,
 			for _, p := range pkScriptData.Payments {
 				pSNC = pSNC + p.Amount
 			}
-		} else {
-			if isSatisfiedBTC(pBTC, targetBTC) {
-				continue
-			}
-			pBTC = pBTC + amount
 		}
+
+		if isSatisfiedBTC(pBTC, targetBTC) {
+			continue
+		}
+		pBTC = pBTC + amount
 
 		coin := &coinBase{
 			TxHash:       txHash,

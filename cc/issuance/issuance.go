@@ -2,6 +2,7 @@ package issuance
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -36,6 +37,14 @@ type ColoredData struct {
 	Sha2              []byte                  `json:"sha_2"`
 	TorrentHash       []byte                  `json:"torrent_hash"`
 	Payments          []*utils.PaymentData    `json:"payments"`
+}
+
+func (cd *ColoredData) String() string {
+	bytes, err := json.Marshal(cd)
+	if err != nil {
+		panic(err)
+	}
+	return string(bytes)
 }
 
 type Response struct {
@@ -125,6 +134,9 @@ func Decode(hexByte []byte) (data *ColoredData, err error) {
 	data.MultiSig = []transfer.MultiSigData{}
 
 	var opcode = consume(1)
+	if len(opcode) == 0 {
+		return nil, fmt.Errorf("missing data to get opcode")
+	}
 	if opcode[0] == opCodes[1][0] {
 		data.TorrentHash = consume(20)
 		data.Sha2 = consume(32)

@@ -4,7 +4,7 @@
 
 /*
 Package bdb implements an instance of walletdb that uses boltdb for the backing
-datastore.
+driver.
 
 Usage
 
@@ -13,12 +13,12 @@ type of "bdb". The only parameters the Open and Create functions take is the
 database path as a string, and an option for the database to not sync its
 freelist to disk as a bool:
 
-	db, err := walletdb.Open("bdb", "path/to/database.db", true)
+	kvdb, err := walletdb.Open("bdb", "path/to/database.kvdb", true)
 	if err != nil {
 		// Handle error
 	}
 
-	db, err := walletdb.Create("bdb", "path/to/database.db", true)
+	kvdb, err := walletdb.Create("bdb", "path/to/database.kvdb", true)
 	if err != nil {
 		// Handle error
 	}
