@@ -76,6 +76,7 @@ func (server *HTTPServer) router() *mux.Router {
 
 	db := r.PathPrefix("/database").Subrouter()
 	db.Path("/rawtransactions").Methods("GET").Handler(appHandler(server.RawTransaction))
+	db.Path("/utxo").Methods("GET").Handler(appHandler(server.Utxo))
 
 	coreHttp.Handle("/", handlers.CombinedLoggingHandler(server.Out(), routers))
 	return routers

@@ -48,6 +48,8 @@ func (logger *Logger) setHook() {
 			logrus.PanicLevel,
 			logrus.FatalLevel,
 			logrus.ErrorLevel,
+			logrus.InfoLevel,
+			logrus.DebugLevel,
 		},
 	})
 

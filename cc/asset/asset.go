@@ -84,10 +84,20 @@ func (a *Asset) Id() string {
 
 func isTransfer(assets map[int]map[int]*Asset, payments []*utils.PaymentData, tx *CCTransaction) bool {
 	var _payments = make([]*utils.PaymentData, len(payments))
-	copy(_payments, payments)
-	var _inputs = make(map[int]*CCVin)
+	for i, p := range payments {
+		_p := *p
+		_payments[i] = &_p
+	}
+	var _inputs = make(map[int]*CCVin, len(tx.Input))
 	for key, value := range tx.Input {
-		_inputs[key] = value
+		if len(value.Assets) == 0 {
+			value.Assets = make(map[int]*Asset)
+		}
+		cpBytes, _ := json.Marshal(value)
+		var copiedCCVin = CCVin{}
+		json.Unmarshal(cpBytes, &copiedCCVin)
+		_inputs[key] = &copiedCCVin
+
 	}
 	var currentInputIndex = 0
 	var currentAssetIndex = 0
@@ -118,8 +128,11 @@ func isTransfer(assets map[int]map[int]*Asset, payments []*utils.PaymentData, tx
 			currentAssetIndex = 0
 		}
 
-		_, assetOk := _inputs[currentInputIndex].Assets[currentAssetIndex]
 		_, inputOk := _inputs[currentInputIndex]
+		var assetOk = false
+		if inputOk {
+			_, assetOk = _inputs[currentInputIndex].Assets[currentAssetIndex]
+		}
 
 		if !assetOk || !inputOk || currentInputIndex >= len(_inputs) {
 			return false
@@ -134,26 +147,21 @@ func isTransfer(assets map[int]map[int]*Asset, payments []*utils.PaymentData, tx
 			}
 
 			if lastPaymentIndex == i {
-
 				curAssetSliceByPaymentOutput := assets[int(payment.Output)]
-
 				if len(curAssetSliceByPaymentOutput) == 0 {
 					return false
 				}
-
 				currentAssetByPaymentOutput, ok := curAssetSliceByPaymentOutput[len(curAssetSliceByPaymentOutput)-1]
 				if !ok {
 					return false
 				}
-
 				if currentAssetByPaymentOutput.AssetId != currentAsset.AssetId {
+
 					return false
 				}
-
 				if currentAsset.AggregationPolicy != "aggregatable" {
 					return false
 				}
-
 				assets[int(payment.Output)][len(assets[int(payment.Output)])-1].Amount += currentAmount
 			} else {
 				realIndex := len(assets[int(payment.Output)])
@@ -173,7 +181,14 @@ func isTransfer(assets map[int]map[int]*Asset, payments []*utils.PaymentData, tx
 
 		if currentAsset.Amount == 0 {
 			currentAssetIndex++
-			for currentInputIndex < len(_inputs) && currentAssetIndex > len(_inputs[currentInputIndex].Assets)-1 {
+			checkIfAssetOk := func(currentInputIndex, currentAssetIndex int) bool {
+				return currentAssetIndex > len(_inputs[currentInputIndex].Assets)-1
+			}
+			checkIfInputOk := func(currentInputIndex int) bool {
+				_, ok := _inputs[currentInputIndex]
+				return ok
+			}
+			for checkIfInputOk(currentInputIndex) && checkIfAssetOk(currentInputIndex, currentAssetIndex) {
 				currentAssetIndex = 0
 				currentInputIndex++
 			}
@@ -201,7 +216,7 @@ func transferToLastOutput(assets map[int]map[int]*Asset, inputs map[int]*CCVin, 
 		if curAsset.AggregationPolicy == "aggregatable" && ok {
 			lastOutputAssets[as].Amount += curAsset.Amount
 		} else if curAsset.Amount > 0 {
-			if _, ok := assetsIndexes[curAsset.AssetId]; ok {
+			if _, ok := assetsIndexes[curAsset.AssetId]; !ok {
 				assetsIndexes[curAsset.AssetId] = len(lastOutputAssets)
 			}
 			lastOutputAssets[len(lastOutputAssets)] = &Asset{
@@ -215,11 +230,10 @@ func transferToLastOutput(assets map[int]map[int]*Asset, inputs map[int]*CCVin, 
 		}
 	}
 	if _, ok := assets[index]; !ok {
-		assets[index] = lastOutputAssets
-	} else {
-		for _, v := range lastOutputAssets {
-			assets[index][len(assets[index])] = v
-		}
+		assets[index] = map[int]*Asset{}
+	}
+	for _, v := range lastOutputAssets {
+		assets[index][len(assets[index])] = v
 	}
 }
 

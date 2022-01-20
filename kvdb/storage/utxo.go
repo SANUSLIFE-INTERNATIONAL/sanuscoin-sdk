@@ -30,6 +30,25 @@ func (db *UtxoDB) Update(raw *entity.UtxoRaw) error {
 	return db.db.Set(key, utxoEntity.Value())
 }
 
+func (db *UtxoDB) GetByTxIdAndIndex(tx string, index int) (map[int]*asset.Asset, error) {
+	result, err := db.db.Get(tx)
+	if err != nil {
+		return map[int]*asset.Asset{}, err
+	}
+	var utxoEntity = &entity.UtxoEntity{}
+	if err = utxoEntity.From([]byte(tx), result); err != nil {
+		return map[int]*asset.Asset{}, err
+	}
+	var assets = map[int]*asset.Asset{}
+	for _, assetData := range utxoEntity.Data() {
+		if assetData.Index == index {
+			assets = assetData.Assets
+		}
+	}
+	return assets, nil
+
+}
+
 func (db *UtxoDB) ToEmptyByIndex(raw *entity.UtxoRaw) error {
 	key := raw.TxId
 	result, err := db.db.Get(key)

@@ -52,7 +52,8 @@ type BalanceRequest struct {
 }
 
 type BalanceResponse struct {
-	Balance float64 `json:"balance"`
+	BTC float64 `json:"balance"`
+	SNC int     `json:"snc"`
 }
 
 func (wallet *Wallet) Balance(r BalanceRequest, resp *BalanceResponse) (err error) {
@@ -60,17 +61,6 @@ func (wallet *Wallet) Balance(r BalanceRequest, resp *BalanceResponse) (err erro
 	if err != nil {
 		return err
 	}
-	switch r.Coin {
-	case "btc":
-		balance, err := wallet.wallet.BTCBalance(addr)
-		resp.Balance = balance
-		return err
-
-	case "snc":
-		balance, err := wallet.wallet.SNCBalance(addr)
-		resp.Balance = float64(balance)
-		return err
-	default:
-		return fmt.Errorf("invalid coin type")
-	}
+	resp.BTC, resp.SNC, err = wallet.wallet.Balance(addr)
+	return err
 }

@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"sanus/sanus-sdk/config"
@@ -64,7 +63,6 @@ func (db *DB) RawTransaction() *RawTransactionDB {
 func assetAddressDB() *AssetAddressDB {
 	store := badger.DataStore()
 	if err := store.Open(filepath.Join(config.AppDataPath(), assetAddressDBName)); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	return NewAssetAddressDB(store)
@@ -73,7 +71,6 @@ func assetAddressDB() *AssetAddressDB {
 func assetUtxoDB() *AssetUtxoDB {
 	store := badger.DataStore()
 	if err := store.Open(filepath.Join(config.AppDataPath(), assetUtxoDBName)); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	return NewAssetUtxoDB(store)
@@ -82,7 +79,6 @@ func assetUtxoDB() *AssetUtxoDB {
 func utxoDB() *UtxoDB {
 	store := badger.DataStore()
 	if err := store.Open(filepath.Join(config.AppDataPath(), utxoDBName)); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	return NewUtxoDB(store)
@@ -91,7 +87,6 @@ func utxoDB() *UtxoDB {
 func rawTransactionDB() *RawTransactionDB {
 	store := badger.DataStore()
 	if err := store.Open(filepath.Join(config.AppDataPath(), rawTransactionDBName)); err != nil {
-		panic(err)
 		return nil
 	}
 	return NewRawTransactionDB(store)
@@ -100,7 +95,6 @@ func rawTransactionDB() *RawTransactionDB {
 func lastBlockDB() *LastBlockDB {
 	store := badger.DataStore()
 	if err := store.Open(filepath.Join(config.AppDataPath(), lastBlockDBName)); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	return NewLastBlockDB(store)
@@ -109,7 +103,6 @@ func lastBlockDB() *LastBlockDB {
 func assetTransactionDB() *AssetTxDB {
 	store := badger.DataStore()
 	if err := store.Open(filepath.Join(config.AppDataPath(), assetTransactionDBName)); err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	return NewAssetTxDB(store)

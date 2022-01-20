@@ -59,7 +59,6 @@ func (tx *CCTransaction) GetAssetOutput() (map[int]map[int]*Asset, error) {
 			return nil, fmt.Errorf("error while decoding issuance Tx %v", err)
 		}
 		if id == "La8e7WhGAEfiT9JGTmyPJopZhkRMwiEPz4uBEG" {
-
 			tx.Input[0].AppendAsset(&Asset{
 				AssetId:           id,
 				Amount:            tx.Issuance.Amount,
@@ -76,6 +75,7 @@ func (tx *CCTransaction) GetAssetOutput() (map[int]map[int]*Asset, error) {
 	}
 
 	var overflow = !isTransfer(assets, payments, tx)
+
 	if overflow {
 		// Transfer failed. Transfer all GetAssets in inputs to last output, aggregate those possible
 		transferToLastOutput(assets, tx.Input, len(tx.Output)-1)
@@ -84,26 +84,3 @@ func (tx *CCTransaction) GetAssetOutput() (map[int]map[int]*Asset, error) {
 	tx.Overflow = overflow
 	return assets, nil
 }
-
-//func (cctx *CCTransaction) Save(db *database.DB) error {
-//	rawTxDb, err := db.RawTransactionDB()
-//	if err != nil {
-//		return err
-//	}
-//	defer rawTxDb.Close()
-//	err = rawTxDb.Update(func(tx *bolt.Tx) (err error) {
-//		key := []byte(cctx.Tx.TxHash().String())
-//		bucket := tx.Bucket(key)
-//		if bucket == nil {
-//			if bucket, err = tx.CreateBucket(key); err != nil {
-//				return err
-//			}
-//		}
-//		rawTxData, err := json.Marshal(cctx)
-//		if err != nil {
-//			return err
-//		}
-//		return bucket.Put(key, rawTxData)
-//	})
-//	return err
-//}

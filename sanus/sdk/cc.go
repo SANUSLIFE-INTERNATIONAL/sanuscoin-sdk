@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"time"
 
 	"sanus/sanus-sdk/cc/asset"
@@ -34,7 +33,7 @@ func (w *BTCWallet) Scan() error {
 	if err != nil {
 		return err
 	}
-	w.Logger.Infof("Scanning started from %v and will finished at %v\n", startBlock, blockchain.Blocks)
+	w.Logger.Infof("Colored Coins scanning  started from %v and will finished at %v\n", startBlock, blockchain.Blocks)
 
 	for blockHeight := startBlock; blockHeight < int(blockchain.Blocks); blockHeight++ {
 		hash, err := w.rpcClient.GetBlockHash(int64(blockHeight))
@@ -48,7 +47,7 @@ func (w *BTCWallet) Scan() error {
 
 		for _, transaction := range block.Transactions {
 			cctx := w.toCCTransaction(transaction)
-			if cctx.Type == "Transfer" || cctx.Type == "issuance" {
+			if cctx.Type == transferTypeName || cctx.Type == issuanceTypeName {
 				if err = w.parseCCTx(cctx); err != nil {
 					w.Logger.Errorf("error caused when trying to parse CCTX", err)
 					continue
@@ -71,11 +70,9 @@ func (w *BTCWallet) Scan() error {
 		if err = w.db.LastBlockDB().Update(lastBlock); err != nil {
 			w.Logger.Errorf("error caused when trying to save last block %v", err.Error())
 		}
-
 	}
 	// waiting for a minute to restart scanning
 	time.Sleep(1 * time.Minute)
-
 	return nil
 }
 
@@ -85,15 +82,19 @@ func (w *BTCWallet) toCCTransaction(tx *wire.MsgTx) *asset.CCTransaction {
 		Output: map[int]*asset.CCVout{},
 		Input:  map[int]*asset.CCVin{},
 	}
-
+	utxoDB := w.db.Utxo()
 	for _, in := range tx.TxIn {
-		cctx.AppendInput(&asset.CCVin{Input: in, Assets: map[int]*asset.Asset{}})
+		inAssets, err := utxoDB.GetByTxIdAndIndex(
+			in.PreviousOutPoint.Hash.String(), int(in.PreviousOutPoint.Index))
+		if err != nil {
+			w.Logger.Errorf("error caused when trying to fetch utxo data by txid")
+		}
+		cctx.AppendInput(&asset.CCVin{Input: in, Assets: inAssets})
 	}
 	for _, out := range tx.TxOut {
 		cctx.AppendOutput(&asset.CCVout{Out: out, Assets: map[int]*asset.Asset{}})
 		if len(out.PkScript) > 2 && out.PkScript[0] == txscript.OP_RETURN {
 			script := out.PkScript[2:]
-
 			if len(script) < 4 {
 				continue
 			}
@@ -103,18 +104,16 @@ func (w *BTCWallet) toCCTransaction(tx *wire.MsgTx) *asset.CCTransaction {
 				continue
 			}
 			switch encoder {
-			case "issuance":
+			case issuanceTypeName:
 				ccData, err := issuance.Decode(script)
 				if err != nil {
 					continue
 				}
 				cctx.Issuance = ccData
 				cctx.Type = issuanceTypeName
-			case "Transfer":
-				fmt.Println("transfer decode")
+			case transferTypeName:
 				ccData, err := transfer.Decode(script)
 				if err != nil {
-					fmt.Println(err)
 					continue
 				}
 				cctx.Transfer = ccData

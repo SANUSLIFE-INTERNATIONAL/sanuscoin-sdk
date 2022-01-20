@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/btcsuite/btcutil"
@@ -10,7 +9,11 @@ import (
 
 type BalanceRequest struct {
 	Address string `json:"address"`
-	Coin    string `json:"coin"`
+}
+
+type BalanceResponse struct {
+	SNC int     `json:"snc"`
+	BTC float64 `json:"btc"`
 }
 
 func (server *HTTPServer) Balance(w http.ResponseWriter, r *http.Request) *AppResponse {
@@ -25,17 +28,10 @@ func (server *HTTPServer) Balance(w http.ResponseWriter, r *http.Request) *AppRe
 			Error: err,
 		}
 	}
-	var balance interface{}
-	switch request.Coin {
-	case "btc":
-		balance, err = server.wallet.BTCBalance(addr)
-	case "snc":
-		balance, err = server.wallet.SNCBalance(addr)
-	default:
-		balance, err = 0, fmt.Errorf("invalid coin type")
-	}
+	var balance = &BalanceResponse{}
+	balance.BTC, balance.SNC, err = server.wallet.Balance(addr)
 	return &AppResponse{
-		Response: fmt.Sprintf("Balance:%v", balance),
+		Response: balance,
 		Error:    err,
 	}
 }

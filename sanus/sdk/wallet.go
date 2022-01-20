@@ -35,6 +35,8 @@ type BTCWallet struct {
 	*log.Logger
 
 	db *storage.DB
+
+	rpcLaunched chan struct{}
 }
 
 // NewWallet creates a new BTCWallet instance
@@ -47,12 +49,13 @@ func NewWallet(cfg *config.Config, db *storage.DB) *BTCWallet {
 	logger := log.NewLogger(cfg)
 	logger.SetPrefix("WLT")
 	return &BTCWallet{
-		loader:    loader,
-		Logger:    logger,
-		cfg:       cfg,
-		lock:      make(chan time.Time, 1),
-		netParams: param,
-		db:        db,
+		loader:      loader,
+		rpcLaunched: make(chan struct{}),
+		Logger:      logger,
+		cfg:         cfg,
+		lock:        make(chan time.Time, 1),
+		netParams:   param,
+		db:          db,
 	}
 }
 
@@ -122,6 +125,10 @@ func (w *BTCWallet) initLogger() {
 // sync method sync current already initialized wallet with blockchain
 func (w *BTCWallet) sync() {
 	w.wlt.SynchronizeRPC(w.rpcClient)
+	go func() {
+		<-w.rpcLaunched
+		w.Scan()
+	}()
 }
 
 // lunchRPC method launches rpc client to connect to blockchain
@@ -137,6 +144,7 @@ func (w *BTCWallet) lunchRPC() (err error) {
 			w.Errorf("error caused when trying to start RPC client | %v", err)
 			return
 		}
+		w.rpcLaunched <- struct{}{}
 		w.Infof("rpc client has been launched")
 	}()
 	return err

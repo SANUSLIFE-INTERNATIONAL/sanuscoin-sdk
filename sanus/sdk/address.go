@@ -451,16 +451,25 @@ func (w *BTCWallet) SNCBalance(address btcutil.Address) (int64, error) {
 	return balance, err
 }
 
-func (w *BTCWallet) BTCBalance(address btcutil.Address) (float64, error) {
+func (w *BTCWallet) Balance(address btcutil.Address) (float64, int, error) {
 	txs, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{
 		address.EncodeAddress(): {},
 	})
 	if err != nil {
-		return 0, nil
+		return 0, 0, nil
 	}
-	var amount float64
+	var utxoDB = w.db.Utxo()
+	var btcAmount float64
+	var sncAmount int
 	for _, tx := range txs {
-		amount += tx.Amount
+		btcAmount += tx.Amount
+		raw, err := utxoDB.GetByTxIdAndIndex(tx.TxID, int(tx.Vout))
+		if err != nil {
+			continue
+		}
+		for _, asset := range raw {
+			sncAmount += asset.Amount
+		}
 	}
-	return amount, nil
+	return btcAmount, sncAmount, nil
 }

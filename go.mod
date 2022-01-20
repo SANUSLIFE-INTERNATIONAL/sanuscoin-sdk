@@ -24,6 +24,7 @@ require (
 	github.com/jrick/logrotate v1.0.0
 	github.com/json-iterator/go v1.1.11
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/mattn/go-sqlite3 v1.14.10 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
