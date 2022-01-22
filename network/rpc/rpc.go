@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"net"
+	"net/http"
 	"net/rpc"
 
 	"sanus/sanus-sdk/config"
@@ -25,6 +26,7 @@ func New(cfg *config.Config, wallet *sdk.BTCWallet) *RPCServer {
 		wallet: wallet,
 	}
 	srv.initLogger()
+	rpc.HandleHTTP()
 	// Create a TCP listener that will listen on `Port`
 	listener, err := net.Listen("tcp", cfg.Net.RPC)
 	if err != nil {
@@ -53,9 +55,9 @@ func (server *RPCServer) Serve(stopSig chan struct{}) {
 		server.Info("rpc server has been stopped")
 
 	}()
-	server.Info("Starting server ....")
+	server.Info("Starting RPC server")
 	// Wait for incoming connections
-	rpc.Accept(server.listener)
+	http.Serve(server.listener, nil)
 }
 
 func (server *RPCServer) Close() error {

@@ -48,7 +48,6 @@ func (wallet *Wallet) List(r ImportAddressRequest, resp *NewAddressResponse) (er
 
 type BalanceRequest struct {
 	Address string `json:"address"`
-	Coin    string `json:"coin"`
 }
 
 type BalanceResponse struct {

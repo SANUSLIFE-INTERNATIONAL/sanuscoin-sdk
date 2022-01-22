@@ -71,8 +71,8 @@ func (server *HTTPServer) router() *mux.Router {
 	network := r.PathPrefix("/network").Subrouter()
 	network.Path("/status").Methods("POST").Handler(appHandler(server.NetworkStatus))
 
-	test := r.PathPrefix("/test").Subrouter()
-	test.Path("/status").Methods("POST").Handler(appHandler(server.TestMethod))
+	//test := r.PathPrefix("/test").Subrouter()
+	//test.Path("/status").Methods("POST").Handler(appHandler(server.TestMethod))
 
 	db := r.PathPrefix("/database").Subrouter()
 	db.Path("/rawtransactions").Methods("GET").Handler(appHandler(server.RawTransaction))

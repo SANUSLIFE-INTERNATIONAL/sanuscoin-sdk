@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"net"
 	"time"
 
@@ -82,6 +83,9 @@ func (w *BTCWallet) Create(pubPassphrase, privPassphrase, seed []byte) (err erro
 
 // Open method opens already existing wallet
 func (w *BTCWallet) Open(pubPassphrase []byte) (err error) {
+	if w.wlt != nil {
+		return fmt.Errorf("wallet already opened")
+	}
 	w.wlt, err = w.loader.OpenExistingWallet(pubPassphrase, false)
 	if err != nil {
 		return err
@@ -95,6 +99,9 @@ func (w *BTCWallet) Open(pubPassphrase []byte) (err error) {
 
 // Unlock method unlocks already initialized wallet
 func (w *BTCWallet) Unlock(privatePassphrase []byte) (err error) {
+	if w.wlt == nil {
+		return fmt.Errorf("wallet hasn't beel opened")
+	}
 	if w.wlt.Locked() {
 		return w.wlt.Unlock(privatePassphrase, w.lock)
 	}

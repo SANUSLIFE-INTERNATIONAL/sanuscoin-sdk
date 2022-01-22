@@ -8,14 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"sanus/sanus-sdk/cc/transfer"
-
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcwallet/waddrmgr"
-	btcWallet "github.com/btcsuite/btcwallet/wallet"
 	"github.com/btcsuite/btcwallet/walletdb"
 )
 
@@ -56,6 +52,9 @@ type managedAddress struct {
 }
 
 func (w *BTCWallet) List() ([]string, error) {
+	if w.wlt != nil {
+		return nil, fmt.Errorf("wallet hasn't been opened")
+	}
 	var addrList []string
 	if accounts, err := w.wlt.Accounts(waddrmgr.KeyScopeBIP0044); err == nil {
 		for _, a := range accounts.Accounts {
@@ -74,6 +73,9 @@ func (w *BTCWallet) List() ([]string, error) {
 
 // NewAddress method generates a new BIP44 address
 func (w *BTCWallet) NewAddress() (btcutil.Address, error) {
+	if w.wlt != nil {
+		return nil, fmt.Errorf("wallet hasn't been opened")
+	}
 	addr, err := w.wlt.NewAddress(0, waddrmgr.KeyScopeBIP0044)
 	if err != nil {
 		return nil, err
@@ -84,6 +86,9 @@ func (w *BTCWallet) NewAddress() (btcutil.Address, error) {
 
 // ImportAddress method imports a new address based on privat key
 func (w *BTCWallet) ImportAddress(publicKey string) (btcutil.Address, error) {
+	if w.wlt != nil {
+		return nil, fmt.Errorf("wallet hasn't been opened")
+	}
 	publickKeyHash, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, err
@@ -316,34 +321,6 @@ func uint32ToBytes(number uint32) []byte {
 	return buf
 }
 
-// deserializeAddressRow deserializes the passed serialized address
-// information.  This is used as a common base for the various address types to
-// deserialize the common parts.
-func deserializeAddressRow(serializedAddress []byte) (*dbAddressRow, error) {
-	// The serialized address format is:
-	//   <addrType><account><addedTime><syncStatus><rawdata>
-	//
-	// 1 byte addrType + 4 bytes account + 8 bytes addTime + 1 byte
-	// syncStatus + 4 bytes raw data length + raw data
-
-	// Given the above, the length of the entry must be at a minimum
-	// the constant value sizes.
-	if len(serializedAddress) < 18 {
-		return nil, fmt.Errorf("malformed serialized address")
-	}
-
-	row := dbAddressRow{}
-	row.addrType = serializedAddress[0]
-	row.account = binary.LittleEndian.Uint32(serializedAddress[1:5])
-	row.addTime = binary.LittleEndian.Uint64(serializedAddress[5:13])
-	row.syncStatus = serializedAddress[13]
-	rdlen := binary.LittleEndian.Uint32(serializedAddress[14:18])
-	row.rawData = make([]byte, rdlen)
-	copy(row.rawData, serializedAddress[18:18+rdlen])
-
-	return &row, nil
-}
-
 // serializeAddressRow returns the serialization of the passed address row.
 func serializeAddressRow(row *dbAddressRow) []byte {
 	// The serialized address format is:
@@ -415,43 +392,10 @@ func (w *BTCWallet) defaultAddress() (address btcutil.Address, err error) {
 	return w.wlt.CurrentAddress(0, waddrmgr.KeyScopeBIP0044)
 }
 
-func (w *BTCWallet) SNCBalance(address btcutil.Address) (int64, error) {
-	txs, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{
-		address.EncodeAddress(): {},
-	})
-
-	if err != nil {
-		return 0, err
-	}
-
-	var balance int64 = 0
-	for _, tx := range txs {
-		h, err := chainhash.NewHashFromStr(tx.TxID)
-		if err != nil {
-			return 0, err
-		}
-		txDetail, err := btcWallet.UnstableAPI(w.wlt).TxDetails(h)
-		if err != nil {
-			return 0, err
-		}
-
-		for _, out := range txDetail.MsgTx.TxOut {
-			pkScript := out.PkScript
-			if pkScript[0] == txscript.OP_RETURN {
-				pkScriptData, err := transfer.Decode(pkScript)
-				if err != nil {
-					w.Errorf("Error caused when trying to fetch data from PkScript | %v", err)
-				}
-				for _, p := range pkScriptData.Payments {
-					balance += int64(p.Amount)
-				}
-			}
-		}
-	}
-	return balance, err
-}
-
 func (w *BTCWallet) Balance(address btcutil.Address) (float64, int, error) {
+	if w.wlt == nil {
+		return 0, 0, fmt.Errorf("wallet hasn't been loaded")
+	}
 	txs, err := w.wlt.ListUnspent(3, 9999999, map[string]struct{}{
 		address.EncodeAddress(): {},
 	})
