@@ -5,7 +5,7 @@ $ go instal
 
 ### Sanuscoin (sanus-sdk) usage
 ```Bash
-$ sanus start (starts btcd daemon)
+$ sanus start (starts btcd daemon) [--testnet (for testnet network)]
 $ sanus init (initialize configuration)
 $ sanus version (returns current sanus-sdk version)
 ```
