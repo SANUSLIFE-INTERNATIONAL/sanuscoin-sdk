@@ -10,6 +10,11 @@ $ sanus init (initialize configuration)
 $ sanus version (returns current sanus-sdk version)
 ```
 
+### System requirements 
+``` Bash
+Memory: >= 2 GB.
+OS: Windows 7/8/10, Linux, Mac - 64bits.
+```
 
 ### .env Usage
 
